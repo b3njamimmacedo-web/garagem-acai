@@ -936,6 +936,113 @@ function Relatorios({ state }) {
   );
 }
 
+/* ============================ IFOOD (simulador de margem & promoção segura) ============================ */
+function IFood({ state }) {
+  const { config } = state;
+  const custo500 = config.produtos.find((p) => p.id === 'p500')?.custo || 5.6;
+  const [preco, setPreco] = useState(23.99);
+  const [comissao, setComissao] = useState(27);
+  const [custo, setCusto] = useState(custo500);
+  const [descLoja, setDescLoja] = useState(10);
+  const [descIfood, setDescIfood] = useState(7.99);
+  const [entrega, setEntrega] = useState(5.99);
+  const alvo = config.margemAlvo || 35;
+
+  const com = comissao / 100;
+  const recebido = preco * (1 - com) - descLoja;     // o que a loja recebe (comissão + desconto bancado pela loja)
+  const lucro = recebido - custo;
+  const margem = preco > 0 ? (lucro / preco) * 100 : 0;
+  const clientePaga = Math.max(0, preco - descLoja - descIfood + entrega);
+  // guardrails
+  const descMaxLucro = preco * (1 - com) - custo;                          // desconto loja p/ lucro zero
+  const descMaxAlvo = preco * (1 - com) - custo - (alvo / 100) * preco;    // desconto loja p/ manter margem alvo
+  const status = lucro < 0 ? 'prejuizo' : margem < alvo ? 'abaixo' : 'ok';
+  const cor = status === 'prejuizo' ? 'red' : status === 'abaixo' ? 'amber' : 'verde';
+
+  const F = ({ label, children }) => (<label className="block"><span className="text-xs font-semibold text-gray-500 mb-1 block">{label}</span>{children}</label>);
+
+  return (
+    <div className="space-y-5">
+      <Card className="p-5 bg-gradient-to-r from-[#EA1D2C] to-[#B0121C] text-white">
+        <h2 className="text-lg font-bold">🛵 Simulador iFood — lucro ou prejuízo?</h2>
+        <p className="text-sm text-red-50">Antes de criar qualquer promoção no iFood, simule aqui. Nunca mais banque um desconto que te faz vender no prejuízo.</p>
+      </Card>
+
+      <div className="grid lg:grid-cols-2 gap-5">
+        {/* Inputs */}
+        <Card className="p-5 space-y-3">
+          <h3 className="font-bold text-roxo-dark">Dados do pedido</h3>
+          <F label="Preço do item no iFood (R$)"><input type="number" step="0.5" className="inp" value={preco} onChange={(e) => setPreco(Number(e.target.value))} /></F>
+          <div className="grid grid-cols-2 gap-3">
+            <F label="Comissão iFood (%)"><input type="number" step="0.5" className="inp" value={comissao} onChange={(e) => setComissao(Number(e.target.value))} /></F>
+            <F label="Custo do açaí (R$)"><input type="number" step="0.1" className="inp" value={custo} onChange={(e) => setCusto(Number(e.target.value))} /></F>
+          </div>
+          <F label="🔴 Desconto bancado pela LOJA (R$) — sai do seu bolso"><input type="number" step="0.5" className="inp" value={descLoja} onChange={(e) => setDescLoja(Number(e.target.value))} /></F>
+          <div className="grid grid-cols-2 gap-3">
+            <F label="Desconto bancado pelo iFood (R$)"><input type="number" step="0.5" className="inp" value={descIfood} onChange={(e) => setDescIfood(Number(e.target.value))} /></F>
+            <F label="Taxa de entrega (R$)"><input type="number" step="0.5" className="inp" value={entrega} onChange={(e) => setEntrega(Number(e.target.value))} /></F>
+          </div>
+        </Card>
+
+        {/* Resultado */}
+        <Card className={`p-5 border-2 ${cor === 'red' ? 'border-red-300 bg-red-50' : cor === 'amber' ? 'border-amber-300 bg-amber-50' : 'border-verde/50 bg-green-50'}`}>
+          <div className="text-center mb-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase">Resultado por pedido</p>
+            <p className={`text-4xl font-extrabold ${lucro < 0 ? 'text-red-600' : 'text-verde-dark'}`}>{brl(lucro)}</p>
+            <p className={`text-sm font-bold ${lucro < 0 ? 'text-red-600' : status === 'abaixo' ? 'text-amber-600' : 'text-verde-dark'}`}>
+              {lucro < 0 ? '🚨 PREJUÍZO — você paga pra vender!' : status === 'abaixo' ? `⚠️ Lucro magro (margem ${pct(margem)}, abaixo de ${pct(alvo)})` : `✓ Saudável (margem ${pct(margem)})`}
+            </p>
+          </div>
+          <div className="space-y-1.5 text-sm bg-white/70 rounded-xl p-3">
+            <div className="flex justify-between"><span className="text-gray-500">Preço no iFood</span><b>{brl(preco)}</b></div>
+            <div className="flex justify-between text-red-500"><span>− Comissão iFood ({pct(comissao)})</span><b>−{brl(preco * com)}</b></div>
+            <div className="flex justify-between text-red-500"><span>− Desconto bancado pela loja</span><b>−{brl(descLoja)}</b></div>
+            <div className="flex justify-between text-gray-500 border-t pt-1.5"><span>= Você recebe</span><b className="text-gray-800">{brl(recebido)}</b></div>
+            <div className="flex justify-between text-red-500"><span>− Custo do açaí</span><b>−{brl(custo)}</b></div>
+            <div className="flex justify-between border-t pt-1.5"><span className="font-semibold">= Lucro real</span><b className={lucro < 0 ? 'text-red-600' : 'text-verde-dark'}>{brl(lucro)}</b></div>
+          </div>
+          <p className="text-[11px] text-gray-400 mt-2 text-center">Cliente paga ≈ {brl(clientePaga)} (com entrega)</p>
+        </Card>
+      </div>
+
+      {/* Guardrail: desconto máximo seguro */}
+      <Card className="p-5 bg-gradient-to-r from-roxo to-roxo-light text-white">
+        <h3 className="font-bold mb-2">🛡️ Desconto máximo seguro (bancado pela loja)</h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="bg-white/15 rounded-xl p-3">
+            <p className="text-xs text-purple-100">Pra não ter PREJUÍZO, no máximo:</p>
+            <p className="text-2xl font-extrabold">{brl(Math.max(0, descMaxLucro))}</p>
+          </div>
+          <div className="bg-white/15 rounded-xl p-3">
+            <p className="text-xs text-purple-100">Pra manter sua margem de {pct(alvo)}, no máximo:</p>
+            <p className="text-2xl font-extrabold">{brl(Math.max(0, descMaxAlvo))}</p>
+          </div>
+        </div>
+        <p className="text-sm text-purple-50 mt-3">
+          {descLoja > descMaxLucro
+            ? <>🚨 Seu desconto atual de <b>{brl(descLoja)}</b> passou do limite — está vendendo no vermelho. Reduza pra no máximo <b>{brl(Math.max(0, descMaxAlvo))}</b>.</>
+            : descLoja > descMaxAlvo
+              ? <>⚠️ Dá lucro, mas abaixo da meta. Pra bater {pct(alvo)}, segure o desconto em até <b>{brl(Math.max(0, descMaxAlvo))}</b>.</>
+              : <>✓ Seu desconto de <b>{brl(descLoja)}</b> está dentro do seguro. Pode rodar essa promoção.</>}
+        </p>
+      </Card>
+
+      {/* Regras de ouro (diagnóstico aplicado) */}
+      <Card className="p-5">
+        <h3 className="font-bold text-roxo-dark mb-3">📋 Regras de ouro no iFood (pra não repetir os erros)</h3>
+        <ul className="space-y-2 text-sm text-gray-600">
+          <li>💸 <b>Nunca banque mais que o desconto seguro acima.</b> No mês passado a loja gastou R$10,56/pedido em promoção — quase metade do ticket.</li>
+          <li>🚫 <b>Não empilhe promoções.</b> 71% dos pedidos tinham 2+ promos juntas. Escolha UMA por pedido.</li>
+          <li>🆕 <b>Frete grátis só pra clientes NOVOS</b> (aquisição) ou com pedido mínimo. Frete grátis "all_users" deu prejuízo (retorno R$0,94).</li>
+          <li>⚡ <b>Aceite o pedido em &lt;1min e mantenha o horário certo.</b> 22% de cancelamento veio de não confirmar / fora do horário — derruba o selo Super.</li>
+          <li>📈 <b>Suba o ticket sem desconto:</b> crie adicionais pagos (mais frutas, Nutella, combo casal). Hoje todos os complementos são R$0,00.</li>
+          <li>🎯 <b>Concentre verba na "Campanha Inteligente"</b> (retorno R$3,85) e ataque o pico <b>16-18h, quarta</b>, no raio de <b>1,5km</b>.</li>
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
 /* ============================ ESTOQUE (controle de insumos) ============================ */
 function Estoque({ state, setState }) {
   const itens = state.estoque || [];
@@ -1446,6 +1553,7 @@ function App({ onLogout }) {
     ['preco', '💡 Precificação'],
     ['custos', '🧾 Custos'],
     ['relatorios', '📈 Relatórios'],
+    ['ifood', '🛵 iFood'],
     ['fidelidade', '🎁 Fidelidade'],
     ['estoque', '📦 Estoque'],
     ['captacao', '📣 Captação'],
@@ -1487,6 +1595,7 @@ function App({ onLogout }) {
       {tab === 'preco' && <Precificacao state={state} setState={setState} />}
       {tab === 'custos' && <Custos state={state} setState={setState} />}
       {tab === 'relatorios' && <Relatorios state={state} />}
+      {tab === 'ifood' && <IFood state={state} />}
       {tab === 'fidelidade' && <Fidelidade state={state} setState={setState} />}
       {tab === 'estoque' && <Estoque state={state} setState={setState} />}
       {tab === 'captacao' && <Captacao state={state} setState={setState} />}

@@ -53,6 +53,24 @@ function loadState() {
 }
 function saveState(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
 
+/* ============================ AUTENTICAÇÃO (acesso do dono) ============================ */
+// Senha guardada como hash SHA-256 (nunca em texto puro). Senha padrão: "garagem2026".
+// O dono pode trocar em Config → a nova senha (hash) fica salva neste navegador.
+const AUTH_KEY = 'garagem_auth';          // flag de sessão logada
+const PWD_HASH_KEY = 'garagem_pwd_hash';  // hash da senha atual (override do padrão)
+const DEFAULT_PWD_HASH = '1d6771d73c59250b2ad4b323beedd6ed14dfc4f302b5007e7f199f3a9ae3c50d'; // garagem2026
+
+async function sha256(txt) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+const senhaAtualHash = () => localStorage.getItem(PWD_HASH_KEY) || DEFAULT_PWD_HASH;
+async function conferirSenha(txt) { return (await sha256(txt)) === senhaAtualHash(); }
+async function definirSenha(nova) { localStorage.setItem(PWD_HASH_KEY, await sha256(nova)); }
+const estaLogado = () => localStorage.getItem(AUTH_KEY) === '1';
+const entrar = () => localStorage.setItem(AUTH_KEY, '1');
+const sair = () => localStorage.removeItem(AUTH_KEY);
+
 /* ============================ HELPERS ============================ */
 const brl = (n) => (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const pct = (n) => `${(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
@@ -754,6 +772,8 @@ function Config({ state, setState }) {
         </div>
       </Card>
 
+      <TrocarSenha />
+
       <Card className="p-5">
         <h3 className="font-bold text-roxo-dark mb-3">Backup dos dados</h3>
         <p className="text-sm text-gray-500 mb-3">Os dados ficam salvos só neste navegador. Exporte de vez em quando pra não perder.</p>
@@ -779,8 +799,92 @@ function Field({ label, children, className = '' }) {
   );
 }
 
+/* ============================ TROCAR SENHA ============================ */
+function TrocarSenha() {
+  const [atual, setAtual] = useState('');
+  const [nova, setNova] = useState('');
+  const [conf, setConf] = useState('');
+  const [msg, setMsg] = useState(null); // { tipo: 'ok'|'erro', texto }
+
+  async function salvar(e) {
+    e.preventDefault();
+    if (!(await conferirSenha(atual))) return setMsg({ tipo: 'erro', texto: 'Senha atual incorreta.' });
+    if (nova.length < 4) return setMsg({ tipo: 'erro', texto: 'A nova senha precisa de ao menos 4 caracteres.' });
+    if (nova !== conf) return setMsg({ tipo: 'erro', texto: 'A confirmação não bate com a nova senha.' });
+    await definirSenha(nova);
+    setAtual(''); setNova(''); setConf('');
+    setMsg({ tipo: 'ok', texto: 'Senha alterada! Use a nova no próximo login.' });
+  }
+
+  return (
+    <Card className="p-5">
+      <h3 className="font-bold text-roxo-dark mb-1">🔒 Acesso & senha</h3>
+      <p className="text-sm text-gray-500 mb-3">Só quem tem a senha entra no sistema. Troque quando quiser.</p>
+      <form onSubmit={salvar} className="grid sm:grid-cols-3 gap-3">
+        <Field label="Senha atual"><input type="password" className="inp" value={atual} onChange={(e) => setAtual(e.target.value)} /></Field>
+        <Field label="Nova senha"><input type="password" className="inp" value={nova} onChange={(e) => setNova(e.target.value)} /></Field>
+        <Field label="Confirmar nova"><input type="password" className="inp" value={conf} onChange={(e) => setConf(e.target.value)} /></Field>
+        <div className="sm:col-span-3 flex items-center gap-3 flex-wrap">
+          <button type="submit" className="bg-roxo hover:bg-roxo-dark text-white font-semibold px-4 py-2 rounded-xl">Salvar nova senha</button>
+          {msg && <span className={`text-sm font-medium ${msg.tipo === 'ok' ? 'text-verde-dark' : 'text-red-600'}`}>{msg.tipo === 'ok' ? '✓' : '⚠️'} {msg.texto}</span>}
+        </div>
+      </form>
+      <p className="text-[11px] text-gray-400 mt-3">A senha fica guardada só neste navegador (em formato protegido/hash). Em outro aparelho, defina novamente.</p>
+    </Card>
+  );
+}
+
+/* ============================ LOGIN (acesso do dono) ============================ */
+function Login({ onOk }) {
+  const [pwd, setPwd] = useState('');
+  const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    setCarregando(true); setErro('');
+    const ok = await conferirSenha(pwd);
+    setCarregando(false);
+    if (ok) { entrar(); onOk(); }
+    else { setErro('Senha incorreta. Tente de novo.'); setPwd(''); }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-6">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-roxo to-verde flex items-center justify-center text-4xl shadow-xl mx-auto mb-4">🍇</div>
+          <h1 className="text-2xl font-extrabold text-roxo-dark">Garagem do Açaí</h1>
+          <p className="text-sm text-gray-400">Área restrita — acesso do dono 🔒</p>
+        </div>
+        <Card className="p-6">
+          <form onSubmit={submit}>
+            <Field label="Senha de acesso">
+              <input type="password" autoFocus className="inp" value={pwd}
+                onChange={(e) => setPwd(e.target.value)} placeholder="Digite sua senha" />
+            </Field>
+            {erro && <p className="text-sm text-red-600 mt-2 font-medium">⚠️ {erro}</p>}
+            <button type="submit" disabled={carregando || !pwd}
+              className="w-full mt-4 bg-roxo hover:bg-roxo-dark disabled:opacity-50 text-white font-bold py-3 rounded-xl shadow transition">
+              {carregando ? 'Entrando…' : 'Entrar'}
+            </button>
+          </form>
+        </Card>
+        <p className="text-center text-[11px] text-gray-300 mt-4">Sistema CONECTEI · acesso protegido</p>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ ROOT (porteiro: login ↔ app) ============================ */
+function Root() {
+  const [logado, setLogado] = useState(estaLogado());
+  if (!logado) return <Login onOk={() => setLogado(true)} />;
+  return <App onLogout={() => { sair(); setLogado(false); }} />;
+}
+
 /* ============================ APP ============================ */
-function App() {
+function App({ onLogout }) {
   const [state, setState] = useState(loadState);
   const [tab, setTab] = useState('dash');
   useEffect(() => { saveState(state); }, [state]);
@@ -804,9 +908,15 @@ function App() {
             <p className="text-xs text-gray-400 font-medium">Gestão financeira & precificação · Imperatriz-MA</p>
           </div>
         </div>
-        <span className="text-[11px] text-gray-400 bg-white px-3 py-1.5 rounded-full border border-purple-100">
-          CONECTEI · dados salvos localmente
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-gray-400 bg-white px-3 py-1.5 rounded-full border border-purple-100 hidden sm:inline">
+            CONECTEI · dados salvos localmente
+          </span>
+          <button onClick={onLogout}
+            className="text-xs font-semibold text-roxo-dark bg-white border border-purple-100 hover:border-roxo/50 hover:text-roxo px-3 py-1.5 rounded-full transition">
+            🔒 Sair
+          </button>
+        </div>
       </header>
 
       <nav className="flex gap-2 mb-6 overflow-x-auto pb-1">
@@ -834,6 +944,6 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <Root />
   </React.StrictMode>
 )

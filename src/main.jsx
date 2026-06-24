@@ -36,6 +36,16 @@ const DEFAULT_STATE = {
   },
   vendas: [],
   clientes: [],   // fidelidade: { id, nome, telefone, selos, resgatados }
+  estoque: [      // controle de insumos: { id, nome, qtd, unidade, minimo }
+    { id: 'e1', nome: 'Açaí (polpa)',        qtd: 20,  unidade: 'kg', minimo: 5 },
+    { id: 'e2', nome: 'Copo 300ml',          qtd: 200, unidade: 'un', minimo: 50 },
+    { id: 'e3', nome: 'Copo 500ml',          qtd: 200, unidade: 'un', minimo: 50 },
+    { id: 'e4', nome: 'Colher + guardanapo', qtd: 300, unidade: 'un', minimo: 100 },
+    { id: 'e5', nome: 'Leite condensado',    qtd: 12,  unidade: 'un', minimo: 3 },
+    { id: 'e6', nome: 'Cobertura chocolate', qtd: 8,   unidade: 'un', minimo: 2 },
+    { id: 'e7', nome: 'Granola',             qtd: 5,   unidade: 'kg', minimo: 1 },
+    { id: 'e8', nome: 'Leite em pó',         qtd: 4,   unidade: 'kg', minimo: 1 },
+  ],
 };
 
 /* ============================ PERSISTÊNCIA ============================ */
@@ -55,7 +65,12 @@ function loadState() {
       const base = dft.produtos.find((d) => d.id === p.id);
       return { ...p, ficha: p.ficha || base?.ficha || { gramas: 150, copo: 0.45, coberturas: 1, complementos: 2 } };
     });
-    return { config: cfg, vendas: parsed.vendas || [], clientes: parsed.clientes || [] };
+    return {
+      config: cfg,
+      vendas: parsed.vendas || [],
+      clientes: parsed.clientes || [],
+      estoque: parsed.estoque || structuredClone(DEFAULT_STATE.estoque),
+    };
   } catch (e) { return structuredClone(DEFAULT_STATE); }
 }
 function saveState(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
@@ -921,6 +936,114 @@ function Relatorios({ state }) {
   );
 }
 
+/* ============================ ESTOQUE (controle de insumos) ============================ */
+function Estoque({ state, setState }) {
+  const itens = state.estoque || [];
+  const [nome, setNome] = useState('');
+  const [qtd, setQtd] = useState('');
+  const [unidade, setUnidade] = useState('un');
+  const [minimo, setMinimo] = useState('');
+
+  function add() {
+    if (!nome.trim()) return;
+    const item = { id: uid(), nome: nome.trim(), qtd: Number(qtd) || 0, unidade, minimo: Number(minimo) || 0 };
+    setState((s) => ({ ...s, estoque: [...(s.estoque || []), item] }));
+    setNome(''); setQtd(''); setMinimo('');
+  }
+  const upd = (id, patch) => setState((s) => ({ ...s, estoque: (s.estoque || []).map((it) => it.id === id ? { ...it, ...patch } : it) }));
+  const ajusta = (id, delta) => setState((s) => ({ ...s, estoque: (s.estoque || []).map((it) => it.id === id ? { ...it, qtd: Math.max(0, Number((it.qtd + delta).toFixed(2))) } : it) }));
+  const remover = (id) => setState((s) => ({ ...s, estoque: (s.estoque || []).filter((it) => it.id !== id) }));
+
+  const baixos = itens.filter((it) => it.qtd <= it.minimo);
+
+  return (
+    <div className="space-y-5">
+      <Card className={`p-5 text-white ${baixos.length ? 'bg-gradient-to-r from-amber-500 to-red-500' : 'bg-gradient-to-r from-verde to-verde-light'}`}>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-lg font-bold">📦 Controle de estoque</h2>
+            <p className="text-sm text-white/90">{baixos.length ? `⚠️ ${baixos.length} item(ns) precisam de reposição!` : 'Tudo em dia — nenhum insumo no nível crítico. ✓'}</p>
+          </div>
+          <div className="text-center"><p className="text-2xl font-extrabold">{itens.length}</p><p className="text-[11px] text-white/80">itens cadastrados</p></div>
+        </div>
+      </Card>
+
+      {baixos.length > 0 && (
+        <Card className="p-4 border-amber-300 bg-amber-50">
+          <p className="font-bold text-amber-700 text-sm mb-2">🛒 Lista de compras (repor agora)</p>
+          <div className="flex flex-wrap gap-2">
+            {baixos.map((it) => (
+              <span key={it.id} className="text-xs bg-white border border-amber-300 text-amber-800 rounded-full px-3 py-1 font-medium">
+                {it.nome} <b>({it.qtd} {it.unidade})</b>
+              </span>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <Card className="p-5">
+        <h3 className="font-bold text-roxo-dark mb-3">Adicionar insumo</h3>
+        <div className="flex gap-3 flex-wrap items-end">
+          <Field label="Insumo" className="flex-1 min-w-[140px]">
+            <input className="inp" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Tapioca" onKeyDown={(e) => e.key === 'Enter' && add()} />
+          </Field>
+          <Field label="Quantidade"><input type="number" className="inp w-24" value={qtd} onChange={(e) => setQtd(e.target.value)} /></Field>
+          <Field label="Unidade">
+            <select className="inp w-24" value={unidade} onChange={(e) => setUnidade(e.target.value)}>
+              <option value="un">un</option><option value="kg">kg</option><option value="L">L</option><option value="cx">cx</option><option value="pct">pct</option>
+            </select>
+          </Field>
+          <Field label="Mínimo (alerta)"><input type="number" className="inp w-24" value={minimo} onChange={(e) => setMinimo(e.target.value)} /></Field>
+          <button onClick={add} className="bg-roxo hover:bg-roxo-dark text-white font-bold px-5 py-2.5 rounded-xl shadow">+ Adicionar</button>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="font-bold text-roxo-dark mb-3">Insumos</h3>
+        {itens.length === 0 ? (
+          <p className="text-sm text-gray-400 py-6 text-center">Nenhum insumo cadastrado.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead><tr className="text-left text-gray-400 border-b border-gray-100">
+                <th className="py-2 font-semibold">Insumo</th>
+                <th className="font-semibold text-center">Quantidade</th>
+                <th className="font-semibold text-center">Mínimo</th>
+                <th className="font-semibold text-center">Ajuste rápido</th>
+                <th></th>
+              </tr></thead>
+              <tbody>
+                {itens.map((it) => {
+                  const baixo = it.qtd <= it.minimo;
+                  return (
+                    <tr key={it.id} className={`border-b border-gray-50 ${baixo ? 'bg-red-50' : ''}`}>
+                      <td className="py-2">
+                        <input className="inp w-40" value={it.nome} onChange={(e) => upd(it.id, { nome: e.target.value })} />
+                        {baixo && <span className="ml-2 text-[10px] text-red-600 font-bold">REPOR</span>}
+                      </td>
+                      <td className="text-center">
+                        <input type="number" className={`inp w-20 text-center font-bold ${baixo ? 'text-red-600' : ''}`} value={it.qtd} onChange={(e) => upd(it.id, { qtd: Number(e.target.value) })} />
+                        <span className="text-gray-400 text-xs ml-1">{it.unidade}</span>
+                      </td>
+                      <td className="text-center"><input type="number" className="inp w-16 text-center" value={it.minimo} onChange={(e) => upd(it.id, { minimo: Number(e.target.value) })} /></td>
+                      <td className="text-center whitespace-nowrap">
+                        <button onClick={() => ajusta(it.id, -1)} className="w-8 h-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 font-bold">−</button>
+                        <button onClick={() => ajusta(it.id, 1)} className="w-8 h-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 font-bold ml-1">+</button>
+                      </td>
+                      <td className="text-right"><button onClick={() => remover(it.id)} className="text-gray-300 hover:text-red-500 px-2">✕</button></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="text-[11px] text-gray-400 mt-3">Atualize as quantidades ao comprar (+) e no fim do dia (−), ou digite direto. Quem fica ≤ mínimo entra na lista de compras automaticamente.</p>
+      </Card>
+    </div>
+  );
+}
+
 /* ============================ CAPTAÇÃO (iFood → WhatsApp) ============================ */
 function Captacao({ state, setState }) {
   const { config } = state;
@@ -1324,6 +1447,7 @@ function App({ onLogout }) {
     ['custos', '🧾 Custos'],
     ['relatorios', '📈 Relatórios'],
     ['fidelidade', '🎁 Fidelidade'],
+    ['estoque', '📦 Estoque'],
     ['captacao', '📣 Captação'],
     ['config', '⚙️ Config'],
   ];
@@ -1364,6 +1488,7 @@ function App({ onLogout }) {
       {tab === 'custos' && <Custos state={state} setState={setState} />}
       {tab === 'relatorios' && <Relatorios state={state} />}
       {tab === 'fidelidade' && <Fidelidade state={state} setState={setState} />}
+      {tab === 'estoque' && <Estoque state={state} setState={setState} />}
       {tab === 'captacao' && <Captacao state={state} setState={setState} />}
       {tab === 'config' && <Config state={state} setState={setState} />}
 

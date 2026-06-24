@@ -8,6 +8,11 @@ const DEFAULT_STATE = {
     meta: 10000,
     margemAlvo: 35,          // % de lucro desejada sobre o preço de venda
     cartaoTaxa: 2.5,         // % maquininha quando pagamento = cartão
+    whatsapp: '5599991717089',  // número oficial p/ captação (55 + DDD + número)
+    captacao: {
+      oferta: 'Pediu pelo iFood? 🍇 Da próxima, peça DIRETO no nosso WhatsApp e ganhe um BRINDE + sem taxa de serviço!',
+      msgCliente: 'Oi! Quero meu brinde da Garagem do Açaí 🍇',
+    },
     canais: [
       { id: 'balcao',  nome: 'Balcão / Loja',     taxa: 0,  cor: '#5FA82B' },
       { id: 'whats',   nome: 'WhatsApp (próprio)', taxa: 0,  cor: '#25D366' },
@@ -44,6 +49,7 @@ function loadState() {
     const dft = structuredClone(DEFAULT_STATE.config);
     const cfg = { ...dft, ...parsed.config };
     cfg.insumos = { ...dft.insumos, ...(parsed.config?.insumos || {}) };
+    cfg.captacao = { ...dft.captacao, ...(parsed.config?.captacao || {}) };
     // garante ficha técnica em cada produto, herdando do default quando faltar
     cfg.produtos = (parsed.config?.produtos || dft.produtos).map((p) => {
       const base = dft.produtos.find((d) => d.id === p.id);
@@ -831,6 +837,77 @@ function Relatorios({ state }) {
   );
 }
 
+/* ============================ CAPTAÇÃO (iFood → WhatsApp) ============================ */
+function Captacao({ state, setState }) {
+  const { config } = state;
+  const cap = config.captacao || {};
+  const [copiado, setCopiado] = useState(false);
+
+  const updCap = (patch) => setState((s) => ({ ...s, config: { ...s.config, captacao: { ...s.config.captacao, ...patch } } }));
+  const updWa = (v) => setState((s) => ({ ...s, config: { ...s.config, whatsapp: v } }));
+
+  const numero = (config.whatsapp || '').replace(/\D/g, '');
+  const waLink = `https://wa.me/${numero}?text=${encodeURIComponent(cap.msgCliente || '')}`;
+  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=10&data=${encodeURIComponent(waLink)}`;
+
+  function copiar() {
+    navigator.clipboard?.writeText(waLink).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2000); });
+  }
+
+  return (
+    <div className="space-y-5">
+      <Card className="p-5 bg-gradient-to-r from-roxo to-verde text-white">
+        <h2 className="text-lg font-bold">📣 Captação iFood → WhatsApp</h2>
+        <p className="text-sm text-purple-50">A virada de chave: tire o cliente do iFood (comissão alta) e traga pro seu WhatsApp, onde a recompra é grátis. Cole o card abaixo em toda sacola de delivery.</p>
+      </Card>
+
+      <div className="grid lg:grid-cols-2 gap-5">
+        {/* Configuração */}
+        <Card className="p-5">
+          <h3 className="font-bold text-roxo-dark mb-3">Configurar</h3>
+          <Field label="WhatsApp (55 + DDD + número, só dígitos)">
+            <input className="inp" value={config.whatsapp || ''} onChange={(e) => updWa(e.target.value)} placeholder="5599991717089" />
+          </Field>
+          <Field label="Chamada do card (a oferta)" className="mt-3">
+            <textarea className="inp" rows="3" value={cap.oferta || ''} onChange={(e) => updCap({ oferta: e.target.value })} />
+          </Field>
+          <Field label="Mensagem que já vem digitada pro cliente" className="mt-3">
+            <input className="inp" value={cap.msgCliente || ''} onChange={(e) => updCap({ msgCliente: e.target.value })} />
+          </Field>
+          <div className="flex gap-2 mt-4 flex-wrap">
+            <button onClick={copiar} className="bg-roxo hover:bg-roxo-dark text-white font-semibold px-4 py-2 rounded-xl">{copiado ? '✓ Copiado!' : '🔗 Copiar link'}</button>
+            <a href={waLink} target="_blank" rel="noreferrer" className="bg-verde hover:bg-verde-dark text-white font-semibold px-4 py-2 rounded-xl">Abrir no WhatsApp</a>
+            <a href={qr} download="qr-garagem-whatsapp.png" target="_blank" rel="noreferrer" className="bg-white border border-purple-200 text-roxo-dark font-semibold px-4 py-2 rounded-xl">⬇ Baixar QR</a>
+          </div>
+          <p className="text-[11px] text-gray-400 mt-3 break-all">Link: {waLink}</p>
+        </Card>
+
+        {/* Card pronto pra imprimir */}
+        <Card className="p-0 overflow-hidden">
+          <div className="bg-gradient-to-br from-roxo to-roxo-dark text-white p-6 text-center h-full flex flex-col items-center justify-center">
+            <p className="text-3xl mb-1">🍇</p>
+            <p className="font-extrabold text-lg leading-tight mb-3">{cap.oferta}</p>
+            <div className="bg-white p-2 rounded-2xl">
+              <img src={qr} alt="QR WhatsApp" width="180" height="180"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            </div>
+            <p className="mt-3 text-sm font-semibold">Aponte a câmera 📲 e chame no Zap</p>
+            <p className="text-xs text-purple-100 mt-1">@garagemdoacaiimperatriz</p>
+          </div>
+        </Card>
+      </div>
+
+      <Card className="p-4 bg-purple-50 border-purple-200">
+        <p className="text-sm text-roxo-dark">
+          <b>Como usar:</b> imprima o card (ou salve o QR) e cole/anexe em <b>toda entrega do iFood</b>. Quando o cliente
+          aponta a câmera, já cai no seu WhatsApp com a mensagem pronta — aí ele entra na sua lista e você dispara as
+          campanhas de recompra (Terça do Dobro etc.) sem pagar comissão. Em 60-90 dias, boa parte dos pedidos migra pro canal direto.
+        </p>
+      </Card>
+    </div>
+  );
+}
+
 /* ============================ FIDELIDADE (11º grátis) ============================ */
 const META_SELOS = 10; // a cada 10 selos, o 11º é grátis
 
@@ -1163,6 +1240,7 @@ function App({ onLogout }) {
     ['custos', '🧾 Custos'],
     ['relatorios', '📈 Relatórios'],
     ['fidelidade', '🎁 Fidelidade'],
+    ['captacao', '📣 Captação'],
     ['config', '⚙️ Config'],
   ];
 
@@ -1202,6 +1280,7 @@ function App({ onLogout }) {
       {tab === 'custos' && <Custos state={state} setState={setState} />}
       {tab === 'relatorios' && <Relatorios state={state} />}
       {tab === 'fidelidade' && <Fidelidade state={state} setState={setState} />}
+      {tab === 'captacao' && <Captacao state={state} setState={setState} />}
       {tab === 'config' && <Config state={state} setState={setState} />}
 
       <footer className="text-center text-xs text-gray-300 mt-10 pb-4">

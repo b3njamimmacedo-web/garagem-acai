@@ -299,7 +299,7 @@ function Vendas({ state, setState }) {
     if (!produto || !canal) return;
     const venda = {
       id: uid(), data: form.data, produtoId: produto.id, canalId: canal.id,
-      qtd: Number(form.qtd), pagamento: form.pagamento,
+      qtd: Number(form.qtd), pagamento: form.pagamento, hora: new Date().getHours(),
       precoUnit, custoUnit: produto.custo, nome: produto.nome,
     };
     setState((s) => ({ ...s, vendas: [venda, ...s.vendas] }));
@@ -310,7 +310,7 @@ function Vendas({ state, setState }) {
     const pu = precoNoCanal(prod, form.canalId);
     const venda = {
       id: uid(), data: todayISO(), produtoId: prod.id, canalId: form.canalId,
-      qtd: 1, pagamento: form.pagamento,
+      qtd: 1, pagamento: form.pagamento, hora: new Date().getHours(),
       precoUnit: pu, custoUnit: prod.custo, nome: prod.nome,
     };
     setState((s) => ({ ...s, vendas: [venda, ...s.vendas] }));
@@ -733,6 +733,47 @@ function Relatorios({ state }) {
   }, [vendas, dias]);
   const maxQtd = Math.max(...topProdutos.map((p) => p.qtd), 1);
 
+  // vendas do período (base p/ horário e dia da semana)
+  const vendasPeriodo = useMemo(() => {
+    const datas = new Set(dias.map((d) => d.data));
+    return vendas.filter((v) => datas.has(v.data));
+  }, [vendas, dias]);
+
+  // horário de pico (só vendas que têm hora registrada)
+  const porHora = useMemo(() => {
+    const arr = Array.from({ length: 24 }, (_, h) => ({ h, pedidos: 0, liquido: 0 }));
+    let temHora = false;
+    vendasPeriodo.forEach((v) => {
+      if (v.hora == null) return;
+      temHora = true;
+      const canal = config.canais.find((c) => c.id === v.canalId);
+      const t = taxaEfetiva(config, canal, v.pagamento) / 100;
+      arr[v.hora].pedidos += 1;
+      arr[v.hora].liquido += v.precoUnit * v.qtd * (1 - t);
+    });
+    const ativos = arr.filter((x) => x.pedidos > 0);
+    const pico = ativos.reduce((a, x) => (x.pedidos > a.pedidos ? x : a), { pedidos: 0, h: null });
+    return { ativos, pico, temHora };
+  }, [vendasPeriodo, config]);
+
+  // por dia da semana (derivado da data)
+  const porDiaSemana = useMemo(() => {
+    const nomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const arr = nomes.map((nome, i) => ({ i, nome, pedidos: 0, liquido: 0 }));
+    vendasPeriodo.forEach((v) => {
+      const [y, mo, d] = v.data.split('-').map(Number);
+      const wd = new Date(y, mo - 1, d).getDay();
+      const canal = config.canais.find((c) => c.id === v.canalId);
+      const t = taxaEfetiva(config, canal, v.pagamento) / 100;
+      arr[wd].pedidos += 1;
+      arr[wd].liquido += v.precoUnit * v.qtd * (1 - t);
+    });
+    const melhor = arr.reduce((a, x) => (x.liquido > a.liquido ? x : a), { liquido: 0, nome: '—' });
+    return { arr, melhor };
+  }, [vendasPeriodo, config]);
+  const maxHora = Math.max(...porHora.ativos.map((x) => x.pedidos), 1);
+  const maxDia = Math.max(...porDiaSemana.arr.map((x) => x.liquido), 1);
+
   // projeção do mês: média/dia ativo × dias do mês
   const diasNoMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
   const projecao = mediaDia * diasNoMes;
@@ -815,6 +856,49 @@ function Relatorios({ state }) {
           </div>
         </Card>
       )}
+
+      <div className="grid lg:grid-cols-2 gap-5">
+        {/* Horário de pico */}
+        <Card className="p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-bold text-roxo-dark">⏰ Horário de pico</p>
+            {porHora.pico.h !== null && <span className="text-xs text-gray-500">pico: <b className="text-roxo">{porHora.pico.h}h</b></span>}
+          </div>
+          {!porHora.temHora ? (
+            <p className="text-sm text-gray-400 py-6 text-center">Ainda sem horários registrados. As próximas vendas já entram aqui automaticamente. ⏱️</p>
+          ) : (
+            <div className="flex items-end gap-1 h-36">
+              {porHora.ativos.map((x) => (
+                <div key={x.h} className="flex-1 flex flex-col items-center justify-end h-full">
+                  <span className="text-[9px] text-gray-400">{x.pedidos}</span>
+                  <div className="w-full rounded-t bg-gradient-to-t from-roxo to-roxo-light" style={{ height: `${(x.pedidos / maxHora) * 100}%` }}
+                    title={`${x.h}h: ${x.pedidos} pedidos · ${brl(x.liquido)}`}></div>
+                  <span className="text-[9px] text-gray-400 mt-0.5">{x.h}h</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {porHora.pico.h !== null && <p className="text-xs text-gray-400 mt-2">Reforce a equipe perto das <b>{porHora.pico.h}h</b> e mande promoção 1-2h antes pra puxar movimento.</p>}
+        </Card>
+
+        {/* Dia da semana */}
+        <Card className="p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-bold text-roxo-dark">📅 Por dia da semana</p>
+            {porDiaSemana.melhor.liquido > 0 && <span className="text-xs text-gray-500">melhor: <b className="text-verde-dark">{porDiaSemana.melhor.nome}</b></span>}
+          </div>
+          <div className="flex items-end gap-2 h-36">
+            {porDiaSemana.arr.map((x) => (
+              <div key={x.i} className="flex-1 flex flex-col items-center justify-end h-full">
+                <div className="w-full rounded-t bg-gradient-to-t from-verde to-verde-light" style={{ height: `${(x.liquido / maxDia) * 100}%` }}
+                  title={`${x.nome}: ${brl(x.liquido)} · ${x.pedidos} ped.`}></div>
+                <span className="text-[10px] text-gray-400 mt-1">{x.nome}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-2">Use o dia mais fraco pra ativar campanha (ex.: "Terça do Dobro") e equilibrar a semana.</p>
+        </Card>
+      </div>
 
       <Card className="p-5">
         <div className="flex justify-between items-end mb-2">

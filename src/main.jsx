@@ -54,17 +54,25 @@ function loadState() {
 function saveState(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
 
 /* ============================ AUTENTICAÇÃO (acesso do dono) ============================ */
-// Senha guardada como hash SHA-256 (nunca em texto puro). Senha padrão: "garagem2026".
-// O dono pode trocar em Config → a nova senha (hash) fica salva neste navegador.
+// Login por e-mail + senha. A senha é guardada como hash SHA-256 (nunca em texto puro).
+// Credenciais padrão do dono:  garagemdoacaiitz@gmail.com  /  garagemdoacaiitz
+// O dono pode trocar a senha em Config → fica salva (hash) neste navegador.
 const AUTH_KEY = 'garagem_auth';          // flag de sessão logada
 const PWD_HASH_KEY = 'garagem_pwd_hash';  // hash da senha atual (override do padrão)
-const DEFAULT_PWD_HASH = '1d6771d73c59250b2ad4b323beedd6ed14dfc4f302b5007e7f199f3a9ae3c50d'; // garagem2026
+const EMAIL_KEY = 'garagem_email';        // e-mail do dono (override do padrão)
+const DEFAULT_EMAIL = 'garagemdoacaiitz@gmail.com';
+const DEFAULT_PWD_HASH = 'd151dbad4803850b1899406fbffaad6044340c40abd2f7715e2cae29b60e32f3'; // garagemdoacaiitz
 
 async function sha256(txt) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
+const normEmail = (e) => (e || '').trim().toLowerCase();
+const emailAtual = () => localStorage.getItem(EMAIL_KEY) || DEFAULT_EMAIL;
 const senhaAtualHash = () => localStorage.getItem(PWD_HASH_KEY) || DEFAULT_PWD_HASH;
+async function conferirCredenciais(email, senha) {
+  return normEmail(email) === normEmail(emailAtual()) && (await sha256(senha)) === senhaAtualHash();
+}
 async function conferirSenha(txt) { return (await sha256(txt)) === senhaAtualHash(); }
 async function definirSenha(nova) { localStorage.setItem(PWD_HASH_KEY, await sha256(nova)); }
 const estaLogado = () => localStorage.getItem(AUTH_KEY) === '1';
@@ -819,7 +827,8 @@ function TrocarSenha() {
   return (
     <Card className="p-5">
       <h3 className="font-bold text-roxo-dark mb-1">🔒 Acesso & senha</h3>
-      <p className="text-sm text-gray-500 mb-3">Só quem tem a senha entra no sistema. Troque quando quiser.</p>
+      <p className="text-sm text-gray-500 mb-1">Login do dono: <b className="text-gray-700">{emailAtual()}</b></p>
+      <p className="text-sm text-gray-500 mb-3">Só quem tem e-mail + senha entra no sistema. Troque a senha quando quiser.</p>
       <form onSubmit={salvar} className="grid sm:grid-cols-3 gap-3">
         <Field label="Senha atual"><input type="password" className="inp" value={atual} onChange={(e) => setAtual(e.target.value)} /></Field>
         <Field label="Nova senha"><input type="password" className="inp" value={nova} onChange={(e) => setNova(e.target.value)} /></Field>
@@ -836,6 +845,7 @@ function TrocarSenha() {
 
 /* ============================ LOGIN (acesso do dono) ============================ */
 function Login({ onOk }) {
+  const [email, setEmail] = useState('');
   const [pwd, setPwd] = useState('');
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
@@ -843,10 +853,10 @@ function Login({ onOk }) {
   async function submit(e) {
     e.preventDefault();
     setCarregando(true); setErro('');
-    const ok = await conferirSenha(pwd);
+    const ok = await conferirCredenciais(email, pwd);
     setCarregando(false);
     if (ok) { entrar(); onOk(); }
-    else { setErro('Senha incorreta. Tente de novo.'); setPwd(''); }
+    else { setErro('E-mail ou senha incorretos. Tente de novo.'); setPwd(''); }
   }
 
   return (
@@ -858,14 +868,18 @@ function Login({ onOk }) {
           <p className="text-sm text-gray-400">Área restrita — acesso do dono 🔒</p>
         </div>
         <Card className="p-6">
-          <form onSubmit={submit}>
-            <Field label="Senha de acesso">
-              <input type="password" autoFocus className="inp" value={pwd}
+          <form onSubmit={submit} className="space-y-3">
+            <Field label="E-mail">
+              <input type="email" autoFocus autoComplete="username" className="inp" value={email}
+                onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" />
+            </Field>
+            <Field label="Senha">
+              <input type="password" autoComplete="current-password" className="inp" value={pwd}
                 onChange={(e) => setPwd(e.target.value)} placeholder="Digite sua senha" />
             </Field>
-            {erro && <p className="text-sm text-red-600 mt-2 font-medium">⚠️ {erro}</p>}
-            <button type="submit" disabled={carregando || !pwd}
-              className="w-full mt-4 bg-roxo hover:bg-roxo-dark disabled:opacity-50 text-white font-bold py-3 rounded-xl shadow transition">
+            {erro && <p className="text-sm text-red-600 font-medium">⚠️ {erro}</p>}
+            <button type="submit" disabled={carregando || !pwd || !email}
+              className="w-full mt-1 bg-roxo hover:bg-roxo-dark disabled:opacity-50 text-white font-bold py-3 rounded-xl shadow transition">
               {carregando ? 'Entrando…' : 'Entrar'}
             </button>
           </form>

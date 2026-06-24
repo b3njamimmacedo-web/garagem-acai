@@ -102,6 +102,12 @@ function cmvDaFicha(insumos, ficha) {
     + (ficha.complementos || 0) * (i.complementoPorcao || 0);
 }
 
+// Preço de um produto num canal específico (usa override; se vazio, cai no preço base)
+function precoNoCanal(produto, canalId) {
+  const v = produto?.precos?.[canalId];
+  return (v === undefined || v === null || v === '') ? (produto?.preco || 0) : Number(v);
+}
+
 /* ============================ COMPONENTES BASE ============================ */
 function Card({ children, className = '' }) {
   return <div className={`bg-white rounded-2xl shadow-sm border border-purple-100 ${className}`}>{children}</div>;
@@ -166,6 +172,18 @@ function Dashboard({ state }) {
   const margemReal = m.bruto ? (m.lucro / m.bruto) * 100 : 0;
   const canaisArr = Object.values(m.porCanal).sort((a, b) => b.bruto - a.bruto);
 
+  // meta diária e quanto já saiu hoje (líquido)
+  const metaDia = config.meta ? config.meta / 30 : 0;
+  const liquidoHoje = useMemo(() => {
+    const hoje = todayISO();
+    return vendas.filter((v) => v.data === hoje).reduce((a, v) => {
+      const canal = config.canais.find((c) => c.id === v.canalId);
+      const t = taxaEfetiva(config, canal, v.pagamento) / 100;
+      return a + v.precoUnit * v.qtd * (1 - t);
+    }, 0);
+  }, [vendas, config]);
+  const faltaHoje = Math.max(0, metaDia - liquidoHoje);
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -212,6 +230,13 @@ function Dashboard({ state }) {
                 Faltam <b>{brl(Math.max(0, config.meta - m.liquido))}</b> · ticket médio atual <b>{brl(ticket)}</b> →
                 ~<b>{Math.ceil(Math.max(0, config.meta - m.liquido) / (ticket || 1))}</b> pedidos pra bater a meta.
               </p>
+              <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between flex-wrap gap-2">
+                <span className="text-xs text-gray-500">🎯 Meta do dia: <b className="text-roxo-dark">{brl(metaDia)}</b></span>
+                <span className="text-xs text-gray-500">Hoje saiu <b className="text-verde-dark">{brl(liquidoHoje)}</b></span>
+                <span className={`text-xs font-semibold ${faltaHoje <= 0 ? 'text-verde-dark' : 'text-amber-600'}`}>
+                  {faltaHoje <= 0 ? '✓ meta do dia batida!' : `faltam ${brl(faltaHoje)} hoje`}
+                </span>
+              </div>
             </Card>
 
             <KPI label="Ticket médio" value={brl(ticket)} sub="por pedido" accent="amber" />
@@ -253,8 +278,11 @@ function Vendas({ state, setState }) {
 
   const produto = config.produtos.find((p) => p.id === form.produtoId);
   const canal = config.canais.find((c) => c.id === form.canalId);
+  const precoUnit = precoNoCanal(produto, form.canalId);
+  const precoBase = produto?.preco || 0;
+  const temOverride = Math.abs(precoUnit - precoBase) > 0.001;
   const t = taxaEfetiva(config, canal, form.pagamento);
-  const bruto = (produto?.preco || 0) * form.qtd;
+  const bruto = precoUnit * form.qtd;
   const liquido = bruto * (1 - t / 100);
   const lucro = liquido - (produto?.custo || 0) * form.qtd;
 
@@ -263,7 +291,7 @@ function Vendas({ state, setState }) {
     const venda = {
       id: uid(), data: form.data, produtoId: produto.id, canalId: canal.id,
       qtd: Number(form.qtd), pagamento: form.pagamento,
-      precoUnit: produto.preco, custoUnit: produto.custo, nome: produto.nome,
+      precoUnit, custoUnit: produto.custo, nome: produto.nome,
     };
     setState((s) => ({ ...s, vendas: [venda, ...s.vendas] }));
     setForm((f) => ({ ...f, qtd: 1 }));
@@ -304,7 +332,8 @@ function Vendas({ state, setState }) {
         </div>
 
         <div className="flex items-center justify-between flex-wrap gap-3 mt-4 p-3 bg-purple-50 rounded-xl">
-          <div className="flex gap-5 text-sm flex-wrap">
+          <div className="flex gap-5 text-sm flex-wrap items-center">
+            <span>Preço un.: <b>{brl(precoUnit)}</b>{temOverride && <span className="text-[11px] text-roxo ml-1">(preço do canal)</span>}</span>
             <span>Bruto: <b>{brl(bruto)}</b></span>
             <span className="text-red-500">Taxa {pct(t)}: <b>-{brl(bruto - liquido)}</b></span>
             <span className="text-verde-dark">Você recebe: <b>{brl(liquido)}</b></span>
@@ -379,6 +408,19 @@ function Precificacao({ state, setState }) {
     const lucro = liquido - custo;
     return preco ? (lucro / preco) * 100 : 0;
   }
+  // arredonda pra cima ao próximo final ",90" (preço psicológico: 18,34 -> 18,90)
+  const arredonda90 = (v) => { let c = Math.floor(v) + 0.90; if (c < v) c += 1; return c; };
+
+  function aplicarPreco(pid, cid, valor) {
+    setState((s) => ({ ...s, config: { ...s.config, produtos: s.config.produtos.map((x) =>
+      x.id === pid ? { ...x, precos: { ...(x.precos || {}), [cid]: Number(valor.toFixed(2)) } } : x) } }));
+  }
+  function limparPreco(pid, cid) {
+    setState((s) => ({ ...s, config: { ...s.config, produtos: s.config.produtos.map((x) => {
+      if (x.id !== pid) return x;
+      const np = { ...(x.precos || {}) }; delete np[cid]; return { ...x, precos: np };
+    }) } }));
+  }
 
   return (
     <div className="space-y-5">
@@ -418,11 +460,15 @@ function Precificacao({ state, setState }) {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {config.canais.map((c) => {
-              const mReal = margemReal(p.preco, p.custo, c.taxa);
+              const precoCanal = precoNoCanal(p, c.id);
+              const hasOverride = !!(p.precos && p.precos[c.id] != null && p.precos[c.id] !== '');
+              const mReal = margemReal(precoCanal, p.custo, c.taxa);
               const ideal = precoIdeal(p.custo, c.taxa, config.margemAlvo);
-              const liquido = p.preco * (1 - c.taxa / 100);
+              const sugestao = ideal === null ? null : arredonda90(ideal);
+              const liquido = precoCanal * (1 - c.taxa / 100);
               const lucro = liquido - p.custo;
               const status = lucro < 0 ? 'prejuizo' : mReal < config.margemAlvo ? 'abaixo' : 'ok';
+              const precisaAjuste = sugestao !== null && sugestao > precoCanal + 0.05;
               const cores = {
                 prejuizo: 'border-red-300 bg-red-50',
                 abaixo: 'border-amber-300 bg-amber-50',
@@ -433,6 +479,11 @@ function Precificacao({ state, setState }) {
                   <p className="font-semibold text-sm" style={{ color: c.cor }}>{c.nome}</p>
                   <p className="text-[11px] text-gray-400 mb-2">taxa {pct(c.taxa)}</p>
 
+                  <div className="flex items-baseline justify-between mb-1">
+                    <span className="text-xs text-gray-500">Preço</span>
+                    <span className="font-bold text-gray-800">{brl(precoCanal)}
+                      {hasOverride && <span className="text-[10px] font-normal text-gray-400 ml-1">(base {brl(p.preco)})</span>}</span>
+                  </div>
                   <div className="space-y-1 text-xs">
                     <Row k="Você recebe" v={brl(liquido)} />
                     <Row k="Lucro/un." v={brl(lucro)} cls={lucro < 0 ? 'text-red-600 font-bold' : 'text-verde-dark font-bold'} />
@@ -440,13 +491,19 @@ function Precificacao({ state, setState }) {
                   </div>
 
                   <div className="mt-2 pt-2 border-t border-white/60">
-                    {ideal === null ? (
+                    {sugestao === null ? (
                       <p className="text-[11px] text-red-600 font-semibold">Margem inviável nesse canal (taxa alta demais)</p>
+                    ) : precisaAjuste ? (
+                      <button onClick={() => aplicarPreco(p.id, c.id, sugestao)}
+                        className="w-full text-[11px] font-bold text-white bg-roxo hover:bg-roxo-dark rounded-lg py-1.5 transition">
+                        Cobrar {brl(sugestao)} ↑
+                      </button>
                     ) : (
-                      <p className="text-[11px] text-gray-600">
-                        Pra {pct(config.margemAlvo)}: cobre <b className="text-roxo">{brl(ideal)}</b>
-                        {ideal > p.preco + 0.05 && <span className="text-amber-600"> (↑ {brl(ideal - p.preco)})</span>}
-                      </p>
+                      <p className="text-[11px] text-verde-dark font-semibold text-center">✓ preço ok p/ {pct(config.margemAlvo)}</p>
+                    )}
+                    {hasOverride && (
+                      <button onClick={() => limparPreco(p.id, c.id)}
+                        className="w-full text-[10px] text-gray-400 hover:text-gray-600 mt-1">voltar ao preço base</button>
                     )}
                   </div>
 

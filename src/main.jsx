@@ -286,6 +286,8 @@ function Vendas({ state, setState }) {
   const liquido = bruto * (1 - t / 100);
   const lucro = liquido - (produto?.custo || 0) * form.qtd;
 
+  const [flash, setFlash] = useState(null); // confirmação visual do PDV
+
   function registrar() {
     if (!produto || !canal) return;
     const venda = {
@@ -296,14 +298,60 @@ function Vendas({ state, setState }) {
     setState((s) => ({ ...s, vendas: [venda, ...s.vendas] }));
     setForm((f) => ({ ...f, qtd: 1 }));
   }
+  // PDV: registra 1 unidade do produto no canal/pagamento selecionados, na hora
+  function registrarRapido(prod) {
+    const pu = precoNoCanal(prod, form.canalId);
+    const venda = {
+      id: uid(), data: todayISO(), produtoId: prod.id, canalId: form.canalId,
+      qtd: 1, pagamento: form.pagamento,
+      precoUnit: pu, custoUnit: prod.custo, nome: prod.nome,
+    };
+    setState((s) => ({ ...s, vendas: [venda, ...s.vendas] }));
+    setFlash(`✓ ${prod.nome} — ${brl(pu)} registrado!`);
+  }
   function remover(id) {
     setState((s) => ({ ...s, vendas: s.vendas.filter((v) => v.id !== id) }));
   }
 
   return (
     <div className="space-y-5">
+      {/* ===== PDV rápido: 1 toque por tamanho ===== */}
+      <Card className="p-5 bg-gradient-to-br from-roxo to-roxo-light text-white">
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+          <div>
+            <h2 className="text-lg font-bold">⚡ Venda rápida (PDV)</h2>
+            <p className="text-sm text-purple-100">Toque no tamanho pra registrar 1 venda na hora.</p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <select className="rounded-lg px-3 py-1.5 text-sm text-roxo-dark font-semibold" value={form.canalId}
+              onChange={(e) => setForm({ ...form, canalId: e.target.value })}>
+              {config.canais.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+            <select className="rounded-lg px-3 py-1.5 text-sm text-roxo-dark font-semibold" value={form.pagamento}
+              onChange={(e) => setForm({ ...form, pagamento: e.target.value })}>
+              <option value="pix">Pix</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="cartao">Cartão</option>
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {config.produtos.map((p) => {
+            const pu = precoNoCanal(p, form.canalId);
+            return (
+              <button key={p.id} onClick={() => registrarRapido(p)}
+                className="bg-white/95 hover:bg-white active:scale-95 text-roxo-dark rounded-2xl py-4 px-2 font-bold shadow-lg transition transform">
+                <span className="block text-base leading-tight">{p.nome}</span>
+                <span className="block text-2xl font-extrabold text-roxo mt-1">{brl(pu)}</span>
+              </button>
+            );
+          })}
+        </div>
+        {flash && <p className="mt-3 text-sm font-semibold bg-white/20 rounded-lg px-3 py-2 inline-block">{flash}</p>}
+      </Card>
+
       <Card className="p-5">
-        <h2 className="text-lg font-bold text-roxo-dark mb-4">Registrar venda</h2>
+        <h2 className="text-lg font-bold text-roxo-dark mb-4">Registrar venda <span className="text-sm font-normal text-gray-400">(detalhada: data/qtd específicas)</span></h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <Field label="Produto">
             <select className="inp" value={form.produtoId} onChange={(e) => setForm({ ...form, produtoId: e.target.value })}>
@@ -1018,3 +1066,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <Root />
   </React.StrictMode>
 )
+
+// PWA: registra o service worker (instalar no celular + offline)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js').catch(() => {});
+  });
+}

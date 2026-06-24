@@ -36,6 +36,16 @@ const DEFAULT_STATE = {
   },
   vendas: [],
   clientes: [],   // fidelidade: { id, nome, telefone, selos, resgatados }
+  adicionais: [   // upsell pago p/ subir ticket: { id, nome, preco, custo }
+    { id: 'a1', nome: 'Nutella',         preco: 5, custo: 1.20 },
+    { id: 'a2', nome: 'Morango fresco',  preco: 4, custo: 1.50 },
+    { id: 'a3', nome: 'Leite Ninho',     preco: 3, custo: 0.80 },
+    { id: 'a4', nome: 'Dobro de açaí',   preco: 6, custo: 2.50 },
+    { id: 'a5', nome: 'Bis picado',      preco: 3, custo: 0.90 },
+    { id: 'a6', nome: 'Ovomaltine',      preco: 3, custo: 0.70 },
+    { id: 'a7', nome: 'Paçoca',          preco: 2, custo: 0.40 },
+    { id: 'a8', nome: 'Banana',          preco: 2, custo: 0.50 },
+  ],
   estoque: [      // controle de insumos: { id, nome, qtd, unidade, minimo }
     { id: 'e1', nome: 'Açaí (polpa)',        qtd: 20,  unidade: 'kg', minimo: 5 },
     { id: 'e2', nome: 'Copo 300ml',          qtd: 200, unidade: 'un', minimo: 50 },
@@ -69,6 +79,7 @@ function loadState() {
       config: cfg,
       vendas: parsed.vendas || [],
       clientes: parsed.clientes || [],
+      adicionais: parsed.adicionais || structuredClone(DEFAULT_STATE.adicionais),
       estoque: parsed.estoque || structuredClone(DEFAULT_STATE.estoque),
     };
   } catch (e) { return structuredClone(DEFAULT_STATE); }
@@ -936,6 +947,114 @@ function Relatorios({ state }) {
   );
 }
 
+/* ============================ ADICIONAIS (subir o ticket sem desconto) ============================ */
+function Adicionais({ state, setState }) {
+  const itens = state.adicionais || [];
+  const [nome, setNome] = useState('');
+  const [preco, setPreco] = useState('');
+  const [custo, setCusto] = useState('');
+  // simulador de ticket
+  const [adesao, setAdesao] = useState(40);     // % dos pedidos que pegam adicional
+  const [pedidosMes, setPedidosMes] = useState(200);
+
+  const ticketAtual = useMemo(() => {
+    let b = 0, n = 0;
+    (state.vendas || []).forEach((v) => { b += v.precoUnit * v.qtd; n += 1; });
+    return n ? b / n : 19;
+  }, [state.vendas]);
+
+  function add() {
+    if (!nome.trim()) return;
+    const it = { id: uid(), nome: nome.trim(), preco: Number(preco) || 0, custo: Number(custo) || 0 };
+    setState((s) => ({ ...s, adicionais: [...(s.adicionais || []), it] }));
+    setNome(''); setPreco(''); setCusto('');
+  }
+  const upd = (id, patch) => setState((s) => ({ ...s, adicionais: (s.adicionais || []).map((it) => it.id === id ? { ...it, ...patch } : it) }));
+  const remover = (id) => setState((s) => ({ ...s, adicionais: (s.adicionais || []).filter((it) => it.id !== id) }));
+
+  const precoMedioAdic = itens.length ? itens.reduce((a, it) => a + it.preco, 0) / itens.length : 3.5;
+  const lucroMedioAdic = itens.length ? itens.reduce((a, it) => a + (it.preco - it.custo), 0) / itens.length : 2.5;
+  const novoTicket = ticketAtual + (adesao / 100) * precoMedioAdic;
+  const extraMes = pedidosMes * (adesao / 100) * precoMedioAdic;
+  const lucroExtraMes = pedidosMes * (adesao / 100) * lucroMedioAdic;
+
+  return (
+    <div className="space-y-5">
+      <Card className="p-5 bg-gradient-to-r from-verde to-roxo text-white">
+        <h2 className="text-lg font-bold">➕ Adicionais — suba o ticket SEM dar desconto</h2>
+        <p className="text-sm text-white/90">Toppings pagos são o item de maior margem do açaí. Foi o que faltou nos seus dados do iFood (complementos todos R$0,00). Cadastre estes como <b>adicionais pagos</b> no cardápio.</p>
+      </Card>
+
+      {/* Simulador de impacto no ticket */}
+      <Card className="p-5">
+        <h3 className="font-bold text-roxo-dark mb-3">📈 Quanto isso põe no seu bolso</h3>
+        <div className="grid sm:grid-cols-2 gap-4 mb-4">
+          <label className="block">
+            <span className="text-xs font-semibold text-gray-500">% dos pedidos que pegam adicional: <b className="text-roxo">{adesao}%</b></span>
+            <input type="range" min="0" max="100" value={adesao} onChange={(e) => setAdesao(Number(e.target.value))} className="w-full accent-roxo mt-2" />
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold text-gray-500">Pedidos por mês (estimativa)</span>
+            <input type="number" className="inp mt-1" value={pedidosMes} onChange={(e) => setPedidosMes(Number(e.target.value))} />
+          </label>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KPI label="Ticket hoje" value={brl(ticketAtual)} accent="roxo" />
+          <KPI label="Ticket novo" value={brl(novoTicket)} sub={`+${brl(novoTicket - ticketAtual)}`} accent="verde" />
+          <KPI label="Faturamento extra/mês" value={brl(extraMes)} accent="amber" />
+          <KPI label="Lucro extra/mês" value={brl(lucroExtraMes)} sub="sem dar 1 centavo de desconto" accent="verde" />
+        </div>
+        <p className="text-xs text-gray-400 mt-3">Com {adesao}% de adesão, cada pedido sobe ~{brl((adesao / 100) * precoMedioAdic)} — e quase tudo é lucro (adicional tem margem altíssima). É o oposto do desconto: aqui você <b>ganha</b> em vez de perder.</p>
+      </Card>
+
+      {/* Cadastro */}
+      <Card className="p-5">
+        <h3 className="font-bold text-roxo-dark mb-3">Adicionar item</h3>
+        <div className="flex gap-3 flex-wrap items-end">
+          <Field label="Adicional" className="flex-1 min-w-[140px]"><input className="inp" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Kit Kat" onKeyDown={(e) => e.key === 'Enter' && add()} /></Field>
+          <Field label="Preço venda (R$)"><input type="number" step="0.5" className="inp w-28" value={preco} onChange={(e) => setPreco(e.target.value)} /></Field>
+          <Field label="Custo (R$)"><input type="number" step="0.1" className="inp w-28" value={custo} onChange={(e) => setCusto(e.target.value)} /></Field>
+          <button onClick={add} className="bg-roxo hover:bg-roxo-dark text-white font-bold px-5 py-2.5 rounded-xl shadow">+ Adicionar</button>
+        </div>
+      </Card>
+
+      {/* Lista com margem */}
+      <Card className="p-5">
+        <h3 className="font-bold text-roxo-dark mb-3">Cardápio de adicionais</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-gray-400 border-b border-gray-100">
+              <th className="py-2 font-semibold">Adicional</th>
+              <th className="font-semibold">Preço</th>
+              <th className="font-semibold">Custo</th>
+              <th className="font-semibold text-right">Lucro/un.</th>
+              <th className="font-semibold text-right">Margem</th>
+              <th></th>
+            </tr></thead>
+            <tbody>
+              {itens.map((it) => {
+                const lucro = it.preco - it.custo;
+                const margem = it.preco ? (lucro / it.preco) * 100 : 0;
+                return (
+                  <tr key={it.id} className="border-b border-gray-50">
+                    <td className="py-2"><input className="inp w-36" value={it.nome} onChange={(e) => upd(it.id, { nome: e.target.value })} /></td>
+                    <td><input type="number" step="0.5" className="inp w-20" value={it.preco} onChange={(e) => upd(it.id, { preco: Number(e.target.value) })} /></td>
+                    <td><input type="number" step="0.1" className="inp w-20" value={it.custo} onChange={(e) => upd(it.id, { custo: Number(e.target.value) })} /></td>
+                    <td className="text-right font-bold text-verde-dark">{brl(lucro)}</td>
+                    <td className="text-right font-semibold text-verde-dark">{pct(margem)}</td>
+                    <td className="text-right"><button onClick={() => remover(it.id)} className="text-gray-300 hover:text-red-500 px-2">✕</button></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[11px] text-gray-400 mt-3">💡 Dica de especialista: ofereça no máximo 6-8 adicionais (excesso trava a decisão) e destaque 1 "campeão" (ex.: Nutella) na foto do produto no iFood.</p>
+      </Card>
+    </div>
+  );
+}
+
 /* ============================ IFOOD (simulador de margem & promoção segura) ============================ */
 function IFood({ state }) {
   const { config } = state;
@@ -1551,6 +1670,7 @@ function App({ onLogout }) {
     ['dash', '📊 Dashboard'],
     ['vendas', '🛒 Vendas'],
     ['preco', '💡 Precificação'],
+    ['adicionais', '➕ Adicionais'],
     ['custos', '🧾 Custos'],
     ['relatorios', '📈 Relatórios'],
     ['ifood', '🛵 iFood'],
@@ -1593,6 +1713,7 @@ function App({ onLogout }) {
       {tab === 'dash' && <Dashboard state={state} />}
       {tab === 'vendas' && <Vendas state={state} setState={setState} />}
       {tab === 'preco' && <Precificacao state={state} setState={setState} />}
+      {tab === 'adicionais' && <Adicionais state={state} setState={setState} />}
       {tab === 'custos' && <Custos state={state} setState={setState} />}
       {tab === 'relatorios' && <Relatorios state={state} />}
       {tab === 'ifood' && <IFood state={state} />}

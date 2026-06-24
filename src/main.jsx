@@ -30,6 +30,7 @@ const DEFAULT_STATE = {
     ],
   },
   vendas: [],
+  clientes: [],   // fidelidade: { id, nome, telefone, selos, resgatados }
 };
 
 /* ============================ PERSISTÊNCIA ============================ */
@@ -48,7 +49,7 @@ function loadState() {
       const base = dft.produtos.find((d) => d.id === p.id);
       return { ...p, ficha: p.ficha || base?.ficha || { gramas: 150, copo: 0.45, coberturas: 1, complementos: 2 } };
     });
-    return { config: cfg, vendas: parsed.vendas || [] };
+    return { config: cfg, vendas: parsed.vendas || [], clientes: parsed.clientes || [] };
   } catch (e) { return structuredClone(DEFAULT_STATE); }
 }
 function saveState(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
@@ -712,6 +713,20 @@ function Relatorios({ state }) {
   const melhorDia = dias.reduce((a, d) => (d.liquido > a.liquido ? d : a), { liquido: 0, data: '—' });
   const max = Math.max(...dias.map((d) => d.liquido), 1);
 
+  // ranking de mais vendidos no período
+  const topProdutos = useMemo(() => {
+    const datas = new Set(dias.map((d) => d.data));
+    const map = {};
+    vendas.forEach((v) => {
+      if (!datas.has(v.data)) return;
+      if (!map[v.produtoId]) map[v.produtoId] = { nome: v.nome, qtd: 0, bruto: 0 };
+      map[v.produtoId].qtd += v.qtd;
+      map[v.produtoId].bruto += v.precoUnit * v.qtd;
+    });
+    return Object.values(map).sort((a, b) => b.qtd - a.qtd);
+  }, [vendas, dias]);
+  const maxQtd = Math.max(...topProdutos.map((p) => p.qtd), 1);
+
   // projeção do mês: média/dia ativo × dias do mês
   const diasNoMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
   const projecao = mediaDia * diasNoMes;
@@ -776,6 +791,25 @@ function Relatorios({ state }) {
         )}
       </Card>
 
+      {topProdutos.length > 0 && (
+        <Card className="p-5">
+          <p className="font-bold text-roxo-dark mb-3">🏆 Mais vendidos no período</p>
+          <div className="space-y-3">
+            {topProdutos.map((p, i) => (
+              <div key={p.nome}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-medium text-gray-700">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}º`} {p.nome}</span>
+                  <span className="text-gray-500"><b className="text-gray-700">{p.qtd}</b> un · {brl(p.bruto)}</span>
+                </div>
+                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-roxo to-roxo-light" style={{ width: `${(p.qtd / maxQtd) * 100}%` }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       <Card className="p-5">
         <div className="flex justify-between items-end mb-2">
           <p className="font-bold text-roxo-dark">Projeção do mês</p>
@@ -793,6 +827,120 @@ function Relatorios({ state }) {
             : <span className="text-amber-600 font-semibold">faltam {brl(config.meta - projecao)} pra meta. Suba o ticket ou os pedidos/dia.</span>}
         </p>
       </Card>
+    </div>
+  );
+}
+
+/* ============================ FIDELIDADE (11º grátis) ============================ */
+const META_SELOS = 10; // a cada 10 selos, o 11º é grátis
+
+function Fidelidade({ state, setState }) {
+  const clientes = state.clientes || [];
+  const [nome, setNome] = useState('');
+  const [tel, setTel] = useState('');
+  const [busca, setBusca] = useState('');
+
+  function add() {
+    if (!nome.trim()) return;
+    const c = { id: uid(), nome: nome.trim(), telefone: tel.trim(), selos: 0, resgatados: 0 };
+    setState((s) => ({ ...s, clientes: [c, ...(s.clientes || [])] }));
+    setNome(''); setTel('');
+  }
+  const upd = (id, fn) => setState((s) => ({ ...s, clientes: (s.clientes || []).map((c) => c.id === id ? fn(c) : c) }));
+  const selo = (id) => upd(id, (c) => ({ ...c, selos: c.selos + 1 }));
+  const tiraSelo = (id) => upd(id, (c) => ({ ...c, selos: Math.max(0, c.selos - 1) }));
+  const resgatar = (id) => upd(id, (c) => c.selos >= META_SELOS ? ({ ...c, selos: c.selos - META_SELOS, resgatados: c.resgatados + 1 }) : c);
+  const remover = (id) => { if (confirm('Remover este cliente da fidelidade?')) setState((s) => ({ ...s, clientes: (s.clientes || []).filter((c) => c.id !== id) })); };
+
+  const filtrados = clientes.filter((c) => {
+    const q = busca.trim().toLowerCase();
+    return !q || c.nome.toLowerCase().includes(q) || (c.telefone || '').includes(q);
+  });
+  const totalResgatados = clientes.reduce((a, c) => a + c.resgatados, 0);
+  const prontos = clientes.filter((c) => c.selos >= META_SELOS).length;
+
+  return (
+    <div className="space-y-5">
+      <Card className="p-5 bg-gradient-to-r from-verde to-verde-light text-white">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-lg font-bold">🎁 Cartão fidelidade — o 11º é grátis</h2>
+            <p className="text-sm text-green-50">A cada {META_SELOS} açaís, o cliente ganha 1. O jeito mais barato de fazer ele voltar sempre.</p>
+          </div>
+          <div className="flex gap-4 text-center">
+            <div><p className="text-2xl font-extrabold">{clientes.length}</p><p className="text-[11px] text-green-50">clientes</p></div>
+            <div><p className="text-2xl font-extrabold">{prontos}</p><p className="text-[11px] text-green-50">prontos p/ brinde</p></div>
+            <div><p className="text-2xl font-extrabold">{totalResgatados}</p><p className="text-[11px] text-green-50">brindes dados</p></div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="font-bold text-roxo-dark mb-3">Cadastrar cliente</h3>
+        <div className="flex gap-3 flex-wrap items-end">
+          <Field label="Nome" className="flex-1 min-w-[140px]">
+            <input className="inp" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome do cliente"
+              onKeyDown={(e) => e.key === 'Enter' && add()} />
+          </Field>
+          <Field label="WhatsApp (opcional)" className="flex-1 min-w-[140px]">
+            <input className="inp" value={tel} onChange={(e) => setTel(e.target.value)} placeholder="(99) 9 9999-9999"
+              onKeyDown={(e) => e.key === 'Enter' && add()} />
+          </Field>
+          <button onClick={add} className="bg-roxo hover:bg-roxo-dark text-white font-bold px-6 py-2.5 rounded-xl shadow">+ Adicionar</button>
+        </div>
+      </Card>
+
+      {clientes.length > 0 && (
+        <input className="inp max-w-xs" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="🔎 Buscar cliente por nome ou telefone" />
+      )}
+
+      {clientes.length === 0 ? (
+        <Card className="p-10 text-center">
+          <p className="text-5xl mb-3">🎁</p>
+          <p className="font-semibold text-gray-600">Nenhum cliente na fidelidade ainda.</p>
+          <p className="text-sm text-gray-400 mt-1">Cadastre o primeiro acima e comece a dar selos a cada compra.</p>
+        </Card>
+      ) : (
+        <div className="grid sm:grid-cols-2 gap-4">
+          {filtrados.map((c) => {
+            const pronto = c.selos >= META_SELOS;
+            return (
+              <Card key={c.id} className={`p-4 ${pronto ? 'border-verde ring-2 ring-verde/30' : ''}`}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-bold text-roxo-dark">{c.nome}</p>
+                    {c.telefone && <p className="text-xs text-gray-400">{c.telefone}</p>}
+                  </div>
+                  <button onClick={() => remover(c.id)} className="text-gray-300 hover:text-red-500 text-sm">✕</button>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 my-3">
+                  {Array.from({ length: META_SELOS }).map((_, i) => (
+                    <span key={i} className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${i < c.selos ? 'bg-roxo text-white border-roxo' : 'bg-gray-50 text-gray-300 border-gray-200'}`}>
+                      {i < c.selos ? '🍇' : i + 1}
+                    </span>
+                  ))}
+                </div>
+
+                <p className="text-xs text-gray-500 mb-2">
+                  {pronto ? <span className="text-verde-dark font-bold">🎉 Pronto! Pode dar o açaí grátis.</span>
+                    : <>Faltam <b>{META_SELOS - c.selos}</b> p/ o brinde</>}
+                  {c.resgatados > 0 && <span className="text-gray-400"> · {c.resgatados} brinde(s) já dado(s)</span>}
+                </p>
+
+                <div className="flex gap-2">
+                  {pronto ? (
+                    <button onClick={() => resgatar(c.id)} className="flex-1 bg-verde hover:bg-verde-dark text-white font-bold py-2 rounded-xl">🎁 Resgatar brinde</button>
+                  ) : (
+                    <button onClick={() => selo(c.id)} className="flex-1 bg-roxo hover:bg-roxo-dark text-white font-bold py-2 rounded-xl">+ Dar selo</button>
+                  )}
+                  <button onClick={() => tiraSelo(c.id)} className="px-3 py-2 rounded-xl border border-gray-200 text-gray-400 hover:text-gray-600">−</button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1014,6 +1162,7 @@ function App({ onLogout }) {
     ['preco', '💡 Precificação'],
     ['custos', '🧾 Custos'],
     ['relatorios', '📈 Relatórios'],
+    ['fidelidade', '🎁 Fidelidade'],
     ['config', '⚙️ Config'],
   ];
 
@@ -1052,6 +1201,7 @@ function App({ onLogout }) {
       {tab === 'preco' && <Precificacao state={state} setState={setState} />}
       {tab === 'custos' && <Custos state={state} setState={setState} />}
       {tab === 'relatorios' && <Relatorios state={state} />}
+      {tab === 'fidelidade' && <Fidelidade state={state} setState={setState} />}
       {tab === 'config' && <Config state={state} setState={setState} />}
 
       <footer className="text-center text-xs text-gray-300 mt-10 pb-4">

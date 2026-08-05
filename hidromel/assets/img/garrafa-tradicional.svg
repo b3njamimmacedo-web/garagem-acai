@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 460" width="260" height="460">
+
+<defs>
+  <linearGradient id="g41" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#7A5E14"/>
+    <stop offset="18%"  stop-color="#D4A017"/>
+    <stop offset="38%"  stop-color="#FBE08A"/>
+    <stop offset="52%"  stop-color="#F5C542"/>
+    <stop offset="70%"  stop-color="#B8860B"/>
+    <stop offset="88%"  stop-color="#6F5411"/>
+    <stop offset="100%" stop-color="#A87D18"/>
+  </linearGradient>
+  <radialGradient id="b44" cx="50%" cy="50%" r="50%">
+    <stop offset="0%"   stop-color="#C98B14" stop-opacity="0.4"/>
+    <stop offset="55%"  stop-color="#C98B14" stop-opacity="0.1"/>
+    <stop offset="100%" stop-color="#C98B14" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="l42" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%"   stop-color="#C98B14" stop-opacity="0.95"/>
+    <stop offset="30%"  stop-color="#C98B14" stop-opacity="0.7"/>
+    <stop offset="55%"  stop-color="#FFF" stop-opacity="0.22"/>
+    <stop offset="70%"  stop-color="#C98B14" stop-opacity="0.8"/>
+    <stop offset="100%" stop-color="#000" stop-opacity="0.45"/>
+  </linearGradient>
+  <linearGradient id="v43" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#FFF" stop-opacity="0.05"/>
+    <stop offset="22%" stop-color="#FFF" stop-opacity="0.30"/>
+    <stop offset="40%" stop-color="#FFF" stop-opacity="0.04"/>
+    <stop offset="100%" stop-color="#000" stop-opacity="0.28"/>
+  </linearGradient>
+</defs>
+<ellipse cx="130" cy="440" rx="86" ry="14" fill="url(#b44)"/>
+<!-- corpo -->
+<path d="M104 40 h52 v72 q0 22 16 40 q18 20 18 48 v186 a20 20 0 0 1 -20 20 h-80 a20 20 0 0 1 -20 -20 v-186 q0 -28 18 -48 q16 -18 16 -40z"
+      fill="url(#l42)"/>
+<path d="M104 40 h52 v72 q0 22 16 40 q18 20 18 48 v186 a20 20 0 0 1 -20 20 h-80 a20 20 0 0 1 -20 -20 v-186 q0 -28 18 -48 q16 -18 16 -40z"
+      fill="url(#v43)" stroke="#D4A017" stroke-opacity="0.45" stroke-width="1.5"/>
+<!-- cápsula -->
+<path d="M100 34 h60 v34 q-30 8 -60 0z" fill="url(#g41)"/>
+<rect x="100" y="26" width="60" height="12" rx="4" fill="#6B1F2A"/>
+<!-- rótulo -->
+<rect x="66" y="228" width="128" height="136" rx="5" fill="#F3E9D2"/>
+<rect x="72" y="234" width="116" height="124" rx="3" fill="none" stroke="#D4A017" stroke-width="1.4" stroke-opacity="0.9"/>
+<g transform="translate(76 238) rotate(0) scale(0.5)" fill="none"
+      stroke="#8A6D1F" stroke-opacity="0.9" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.45"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#8A6D1F" fill-opacity="0.675" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#8A6D1F" fill-opacity="0.9" stroke="none"/>
+  </g>
+<g transform="translate(184 238) rotate(90) scale(0.5)" fill="none"
+      stroke="#8A6D1F" stroke-opacity="0.9" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.45"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#8A6D1F" fill-opacity="0.675" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#8A6D1F" fill-opacity="0.9" stroke="none"/>
+  </g>
+<g transform="translate(184 354) rotate(180) scale(0.5)" fill="none"
+      stroke="#8A6D1F" stroke-opacity="0.9" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.45"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#8A6D1F" fill-opacity="0.675" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#8A6D1F" fill-opacity="0.9" stroke="none"/>
+  </g>
+<g transform="translate(76 354) rotate(270) scale(0.5)" fill="none"
+      stroke="#8A6D1F" stroke-opacity="0.9" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.45"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#8A6D1F" fill-opacity="0.675" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#8A6D1F" fill-opacity="0.9" stroke="none"/>
+  </g>
+<g transform="translate(105 246) scale(0.5)"><g stroke="#8A6D1F" fill="none" stroke-width="4" stroke-linejoin="round">
+    <path d="M47.40,16.50 Q50.00,15.00 52.60,16.50 L62.12,22.00 Q64.72,23.50 64.72,26.50 L64.72,37.50 Q64.72,40.50 62.12,42.00 L52.60,47.50 Q50.00,49.00 47.40,47.50 L37.88,42.00 Q35.28,40.50 35.28,37.50 L35.28,26.50 Q35.28,23.50 37.88,22.00 Z"/>
+    <path d="M29.40,46.50 Q32.00,45.00 34.60,46.50 L44.12,52.00 Q46.72,53.50 46.72,56.50 L46.72,67.50 Q46.72,70.50 44.12,72.00 L34.60,77.50 Q32.00,79.00 29.40,77.50 L19.88,72.00 Q17.28,70.50 17.28,67.50 L17.28,56.50 Q17.28,53.50 19.88,52.00 Z"/>
+    <path d="M65.40,46.50 Q68.00,45.00 70.60,46.50 L80.12,52.00 Q82.72,53.50 82.72,56.50 L82.72,67.50 Q82.72,70.50 80.12,72.00 L70.60,77.50 Q68.00,79.00 65.40,77.50 L55.88,72.00 Q53.28,70.50 53.28,67.50 L53.28,56.50 Q53.28,53.50 55.88,52.00 Z"/>
+    <path d="M48.27,25.00 Q50.00,24.00 51.73,25.00 L55.20,27.00 Q56.93,28.00 56.93,30.00 L56.93,34.00 Q56.93,36.00 55.20,37.00 L51.73,39.00 Q50.00,40.00 48.27,39.00 L44.80,37.00 Q43.07,36.00 43.07,34.00 L43.07,30.00 Q43.07,28.00 44.80,27.00 Z" fill="#8A6D1F" fill-opacity="0.65" stroke="none"/>
+    <path d="M50 82 q6 9 6 13 a6 6 0 0 1 -12 0 q0 -4 6 -13z" fill="#8A6D1F" stroke="none"/></g></g>
+<path d="M84 306 h92" stroke="#8A6D1F" stroke-width="1.2"/>
+<text x="130" y="326" text-anchor="middle" font-family="Georgia,serif" font-size="14"
+      font-weight="700" letter-spacing="1" fill="#1a1208">TRADIÇÃO</text>
+<text x="130" y="344" text-anchor="middle" font-family="Georgia,serif" font-size="8"
+      letter-spacing="3" fill="#4a3b1e">HIDROMEL · 750ml</text>
+<!-- reflexo -->
+<path d="M112 130 q-6 40 -4 120 q1 60 2 130" stroke="#FFF" stroke-opacity="0.28"
+      stroke-width="7" fill="none" stroke-linecap="round"/>
+
+</svg>

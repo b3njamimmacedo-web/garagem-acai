@@ -1,0 +1,40 @@
+name = "hidromel-de-reis-api"
+main = "worker.js"
+compatibility_date = "2026-01-15"
+
+# Namespace KV onde ficam alunos, códigos e pedidos.
+# Crie com:  npx wrangler kv namespace create ALUNOS
+# e cole o id devolvido abaixo.
+[[kv_namespaces]]
+binding = "ALUNOS"
+id = "COLE_AQUI_O_ID_DO_KV"
+
+[vars]
+# URL pública DESTE worker (o Mercado Pago chama o webhook aqui).
+URL_PUBLICA = "https://hidromel-de-reis-api.SEU-SUBDOMINIO.workers.dev"
+
+# URL do site estático (páginas de vendas e área de membros).
+URL_SITE = "https://hidromeldereis.com.br"
+
+# Origem autorizada a chamar a API pelo navegador.
+# Deixar "*" funciona, mas trave no seu domínio antes de vender.
+ORIGEM_PERMITIDA = "https://hidromeldereis.com.br"
+
+# Plano usado quando o webhook externo não identifica a oferta.
+PLANO_PADRAO = "iniciado"
+
+# Mapa id-da-oferta -> plano, para Kirvano/Cakto/Hotmart. JSON em string.
+# Ex.: PLANOS_EXTERNOS = '{"9182736":"mestre","5544332":"real"}'
+PLANOS_EXTERNOS = "{}"
+
+EMAIL_REMETENTE = "Hidromel de Reis <acesso@hidromeldereis.com.br>"
+
+# =============================================================================
+# SEGREDOS — nunca coloque aqui. Use `npx wrangler secret put NOME`:
+#
+#   SEGREDO                     assina os tokens de acesso (gere 48+ chars aleatórios)
+#   MP_ACCESS_TOKEN             token de produção do Mercado Pago
+#   MP_WEBHOOK_SECRET           chave secreta do webhook, no painel do MP
+#   RESEND_API_KEY              envio de e-mail
+#   WEBHOOK_TOKEN_PLATAFORMA    token compartilhado p/ Kirvano/Cakto/Hotmart
+# =============================================================================

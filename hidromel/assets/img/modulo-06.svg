@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" width="480" height="300">
+
+<defs>
+  <pattern id="fv1t" width="39.00" height="45.03" patternUnits="userSpaceOnUse">
+    <polygon points="26.00,0.00 13.00,22.52 -13.00,22.52 -26.00,0.00 -13.00,-22.52 13.00,-22.52" fill="none" stroke="#D4A017" stroke-opacity="0.09" stroke-width="1.2"/>
+    <polygon points="26.00,45.03 13.00,67.55 -13.00,67.55 -26.00,45.03 -13.00,22.52 13.00,22.52" fill="none" stroke="#D4A017" stroke-opacity="0.09" stroke-width="1.2"/>
+    <polygon points="65.00,22.52 52.00,45.03 26.00,45.03 13.00,22.52 26.00,0.00 52.00,0.00" fill="none" stroke="#D4A017" stroke-opacity="0.09" stroke-width="1.2"/>
+    <polygon points="26.00,22.52 13.00,45.03 -13.00,45.03 -26.00,22.52 -13.00,0.00 13.00,0.00" fill="none" stroke="#D4A017" stroke-opacity="0.045" stroke-width="1.2"/>
+  </pattern>
+  <filter id="gr1u" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" seed="7" result="n"/>
+    <feColorMatrix in="n" type="saturate" values="0" result="ng"/>
+    <feComponentTransfer in="ng" result="nt"><feFuncA type="linear" slope="0.34"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" in2="nt" mode="multiply"/>
+  </filter>
+  <linearGradient id="g1v" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#7A5E14"/>
+    <stop offset="18%"  stop-color="#D4A017"/>
+    <stop offset="38%"  stop-color="#FBE08A"/>
+    <stop offset="52%"  stop-color="#F5C542"/>
+    <stop offset="70%"  stop-color="#B8860B"/>
+    <stop offset="88%"  stop-color="#6F5411"/>
+    <stop offset="100%" stop-color="#A87D18"/>
+  </linearGradient>
+  <linearGradient id="gt1y" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#FBE08A"/>
+    <stop offset="40%"  stop-color="#F5C542"/>
+    <stop offset="75%"  stop-color="#D4A017"/>
+    <stop offset="100%" stop-color="#A87D18"/>
+  </linearGradient>
+  <radialGradient id="br1w" cx="50%" cy="50%" r="50%">
+    <stop offset="0%"   stop-color="#6B1F2A" stop-opacity="0.75"/>
+    <stop offset="55%"  stop-color="#6B1F2A" stop-opacity="0.1875"/>
+    <stop offset="100%" stop-color="#6B1F2A" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="f1x" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#6B1F2A" stop-opacity="0.30"/>
+    <stop offset="45%"  stop-color="#171009"/>
+    <stop offset="100%" stop-color="#0E0B08"/>
+  </linearGradient>
+</defs>
+<rect width="480" height="300" fill="#0E0B08"/>
+<rect width="480" height="300" fill="url(#f1x)"/>
+<rect width="480" height="300" fill="url(#fv1t)"/>
+<ellipse cx="150" cy="150" rx="190" ry="170" fill="url(#br1w)" opacity="0.5"/>
+
+<!-- moldura -->
+<rect x="14" y="14" width="452" height="272" fill="none"
+      stroke="url(#g1v)" stroke-width="2" stroke-opacity="0.85"/>
+<rect x="21" y="21" width="438" height="258" fill="none"
+      stroke="#D4A017" stroke-width="0.8" stroke-opacity="0.35"/>
+<g transform="translate(20 20) rotate(0) scale(1.05)" fill="none"
+      stroke="#D4A017" stroke-opacity="0.8" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.4"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#D4A017" fill-opacity="0.6000000000000001" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#D4A017" fill-opacity="0.8" stroke="none"/>
+  </g>
+<g transform="translate(460 20) rotate(90) scale(1.05)" fill="none"
+      stroke="#D4A017" stroke-opacity="0.8" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.4"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#D4A017" fill-opacity="0.6000000000000001" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#D4A017" fill-opacity="0.8" stroke="none"/>
+  </g>
+<g transform="translate(460 280) rotate(180) scale(1.05)" fill="none"
+      stroke="#D4A017" stroke-opacity="0.8" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.4"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#D4A017" fill-opacity="0.6000000000000001" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#D4A017" fill-opacity="0.8" stroke="none"/>
+  </g>
+<g transform="translate(20 280) rotate(270) scale(1.05)" fill="none"
+      stroke="#D4A017" stroke-opacity="0.8" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.4"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#D4A017" fill-opacity="0.6000000000000001" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#D4A017" fill-opacity="0.8" stroke="none"/>
+  </g>
+
+<!-- glifo em hexágono -->
+<g transform="translate(150 150)">
+  <path d="M-10.39,-78.00 Q0.00,-84.00 10.39,-78.00 L62.35,-48.00 Q72.75,-42.00 72.75,-30.00 L72.75,30.00 Q72.75,42.00 62.35,48.00 L10.39,78.00 Q0.00,84.00 -10.39,78.00 L-62.35,48.00 Q-72.75,42.00 -72.75,30.00 L-72.75,-30.00 Q-72.75,-42.00 -62.35,-48.00 Z" fill="#0E0B08" fill-opacity="0.55"
+        stroke="url(#g1v)" stroke-width="2.5"/>
+  <path d="M-8.66,-67.00 Q0.00,-72.00 8.66,-67.00 L53.69,-41.00 Q62.35,-36.00 62.35,-26.00 L62.35,26.00 Q62.35,36.00 53.69,41.00 L8.66,67.00 Q0.00,72.00 -8.66,67.00 L-53.69,41.00 Q-62.35,36.00 -62.35,26.00 L-62.35,-26.00 Q-62.35,-36.00 -53.69,-41.00 Z" fill="none" stroke="#6B1F2A" stroke-width="1.2" stroke-opacity="0.55"/>
+  <g transform="translate(-50 -50)"><g stroke="#F5C542" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M50 10 L84 24 v28 q0 26 -34 38 q-34 -12 -34 -38 v-28z"/>
+    <path d="M50 28 v40 M38 44 h24" />
+    <path d="M50 22 L66 30 v18 q0 14 -16 20 q-16 -6 -16 -20 v-18z" fill="#F5C542" fill-opacity="0.28" stroke="none"/></g></g>
+</g>
+
+<!-- numeral -->
+<text x="300" y="132" font-family="Georgia,'Times New Roman',serif" font-size="82"
+      font-weight="700" letter-spacing="2" fill="url(#gt1y)">VI</text>
+<text x="302" y="160" font-family="Georgia,serif" font-size="13" letter-spacing="6"
+      fill="#8A7B62">MÓDULO 06</text>
+<path d="M300 176 h140" stroke="url(#g1v)" stroke-width="2"/>
+<text x="300" y="194" font-family="Georgia,serif" font-size="18"
+      font-weight="700" letter-spacing="1.2" fill="#F3E9D2">MEDIEVAIS</text>
+<text x="300" y="218" font-family="Georgia,serif" font-size="18"
+      font-weight="700" letter-spacing="1.2" fill="#F3E9D2">CLÁSSICAS</text>
+<text x="300" y="250" font-family="Georgia,serif" font-size="11" letter-spacing="2.4"
+      fill="#D4A017" opacity="0.8">HIDROMEL DE REIS</text>
+
+<rect width="480" height="300" filter="url(#gr1u)" fill="transparent" opacity="0.5"/>
+
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 40" width="600" height="40">
+
+<defs><linearGradient id="gl" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%"   stop-color="#7A5E14"/>
+    <stop offset="18%"  stop-color="#D4A017"/>
+    <stop offset="38%"  stop-color="#FBE08A"/>
+    <stop offset="52%"  stop-color="#F5C542"/>
+    <stop offset="70%"  stop-color="#B8860B"/>
+    <stop offset="88%"  stop-color="#6F5411"/>
+    <stop offset="100%" stop-color="#A87D18"/>
+  </linearGradient></defs>
+<g stroke="url(#gl)" stroke-width="1.6" fill="none">
+  <path d="M0 20 H210" opacity="0.5"/>
+  <path d="M390 20 H600" opacity="0.5"/>
+  <path d="M222 20 q14 -12 28 0 q-14 12 -28 0z" fill="url(#gl)" stroke="none"/>
+  <path d="M350 20 q14 -12 28 0 q-14 12 -28 0z" fill="url(#gl)" stroke="none"/>
+</g>
+<path d="M297.40,6.50 Q300.00,5.00 302.60,6.50 L310.39,11.00 Q312.99,12.50 312.99,15.50 L312.99,24.50 Q312.99,27.50 310.39,29.00 L302.60,33.50 Q300.00,35.00 297.40,33.50 L289.61,29.00 Q287.01,27.50 287.01,24.50 L287.01,15.50 Q287.01,12.50 289.61,11.00 Z" fill="none" stroke="url(#gl)" stroke-width="1.8"/>
+<path d="M298.70,13.75 Q300.00,13.00 301.30,13.75 L304.76,15.75 Q306.06,16.50 306.06,18.00 L306.06,22.00 Q306.06,23.50 304.76,24.25 L301.30,26.25 Q300.00,27.00 298.70,26.25 L295.24,24.25 Q293.94,23.50 293.94,22.00 L293.94,18.00 Q293.94,16.50 295.24,15.75 Z" fill="url(#gl)"/>
+
+</svg>

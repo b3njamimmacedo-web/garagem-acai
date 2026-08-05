@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+<defs>
+  <linearGradient id="g4d" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#7A5E14"/>
+    <stop offset="18%"  stop-color="#D4A017"/>
+    <stop offset="38%"  stop-color="#FBE08A"/>
+    <stop offset="52%"  stop-color="#F5C542"/>
+    <stop offset="70%"  stop-color="#B8860B"/>
+    <stop offset="88%"  stop-color="#6F5411"/>
+    <stop offset="100%" stop-color="#A87D18"/>
+  </linearGradient>
+  <pattern id="fv4e" width="27.00" height="31.18" patternUnits="userSpaceOnUse">
+    <polygon points="18.00,0.00 9.00,15.59 -9.00,15.59 -18.00,0.00 -9.00,-15.59 9.00,-15.59" fill="none" stroke="#D4A017" stroke-opacity="0.1" stroke-width="1.1"/>
+    <polygon points="18.00,31.18 9.00,46.77 -9.00,46.77 -18.00,31.18 -9.00,15.59 9.00,15.59" fill="none" stroke="#D4A017" stroke-opacity="0.1" stroke-width="1.1"/>
+    <polygon points="45.00,15.59 36.00,31.18 18.00,31.18 9.00,15.59 18.00,0.00 36.00,0.00" fill="none" stroke="#D4A017" stroke-opacity="0.1" stroke-width="1.1"/>
+    <polygon points="18.00,15.59 9.00,31.18 -9.00,31.18 -18.00,15.59 -9.00,0.00 9.00,0.00" fill="none" stroke="#D4A017" stroke-opacity="0.05" stroke-width="1.1"/>
+  </pattern>
+  <radialGradient id="br4f" cx="50%" cy="50%" r="50%">
+    <stop offset="0%"   stop-color="#F5C542" stop-opacity="0.3"/>
+    <stop offset="55%"  stop-color="#F5C542" stop-opacity="0.075"/>
+    <stop offset="100%" stop-color="#F5C542" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="gr4g" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="4" seed="7" result="n"/>
+    <feColorMatrix in="n" type="saturate" values="0" result="ng"/>
+    <feComponentTransfer in="ng" result="nt"><feFuncA type="linear" slope="0.28"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" in2="nt" mode="multiply"/>
+  </filter>
+</defs>
+<g opacity="1">
+  <circle cx="160" cy="160" r="150" fill="#0E0B08"/>
+  <circle cx="160" cy="160" r="150" fill="url(#br4f)"/>
+  <path d="M146.14,40.00 Q160.00,32.00 173.86,40.00 L256.99,88.00 Q270.85,96.00 270.85,112.00 L270.85,208.00 Q270.85,224.00 256.99,232.00 L173.86,280.00 Q160.00,288.00 146.14,280.00 L63.01,232.00 Q49.15,224.00 49.15,208.00 L49.15,112.00 Q49.15,96.00 63.01,88.00 Z" fill="none" stroke="url(#g4d)" stroke-width="6"/>
+  <path d="M147.88,55.00 Q160.00,48.00 172.12,55.00 L244.87,97.00 Q256.99,104.00 256.99,118.00 L256.99,202.00 Q256.99,216.00 244.87,223.00 L172.12,265.00 Q160.00,272.00 147.88,265.00 L75.13,223.00 Q63.01,216.00 63.01,202.00 L63.01,118.00 Q63.01,104.00 75.13,97.00 Z" fill="url(#fv4e)" stroke="url(#g4d)" stroke-width="1.6" stroke-opacity="0.5"/>
+
+  <!-- coroa -->
+  <g fill="url(#g4d)">
+    <path d="M112 74 L128 104 L160 66 L192 104 L208 74 L214 112 L106 112 Z"/>
+    <rect x="104" y="115" width="112" height="9" rx="3"/>
+    <circle cx="112" cy="70" r="6"/><circle cx="160" cy="60" r="7"/><circle cx="208" cy="70" r="6"/>
+  </g>
+
+  <!-- chifre de beber: crescente que afina até a ponta.
+       Escala 0.76 em torno de (160,190) para a ponta não furar o hexágono. -->
+  <g transform="translate(160 190) scale(0.76) translate(-160 -190) translate(-6 -2)">
+    <path d="M88 140
+             C 168 122, 232 168, 244 244
+             C 216 220, 174 202, 120 192
+             C 100 186, 90 166, 88 140 Z"
+          fill="#D4A017" fill-opacity="0.18"
+          stroke="url(#g4d)" stroke-width="6.5" stroke-linejoin="round"/>
+    <!-- hidromel dentro -->
+    <path d="M104 168
+             C 158 158, 206 190, 222 232
+             C 200 216, 168 204, 126 196
+             C 112 192, 106 182, 104 168 Z"
+          fill="url(#g4d)" fill-opacity="0.62"/>
+    <!-- aro da boca -->
+    <ellipse cx="100" cy="160" rx="17" ry="30" transform="rotate(-24 100 160)"
+             fill="#0E0B08" stroke="url(#g4d)" stroke-width="7"/>
+    <ellipse cx="100" cy="160" rx="9" ry="19" transform="rotate(-24 100 160)"
+             fill="url(#g4d)" fill-opacity="0.55"/>
+    <!-- gota de mel escorrendo da ponta -->
+    <path d="M238 262 q11 16 11 24 a11 11 0 0 1 -22 0 q0 -8 11 -24z" fill="url(#g4d)"/>
+  </g>
+</g>
+<rect width="64" height="64" filter="url(#gr4g)" fill="transparent" opacity="0.5"/>
+
+</svg>

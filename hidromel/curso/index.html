@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Ordem do Hidromel — Área de Membros</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0E0B08">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+<link rel="stylesheet" href="../assets/css/curso.css">
+</head>
+<body>
+
+<!-- ============================================================== ENTRADA -->
+<div class="entrada" id="telaEntrada">
+  <div class="entrada-caixa">
+    <img class="marca" src="../assets/img/logo.svg" alt="Hidromel de Reis" width="74">
+    <h1>A Ordem do Hidromel</h1>
+    <p class="sub">Entre com o código que você recebeu por e-mail</p>
+
+    <div id="entradaAviso"></div>
+
+    <form id="formEntrada" novalidate>
+      <div class="campo">
+        <label for="enEmail">E-mail da compra</label>
+        <input id="enEmail" type="email" autocomplete="email" placeholder="voce@email.com" required>
+        <span class="erro">Informe o e-mail usado na compra.</span>
+      </div>
+      <div class="campo">
+        <label for="enCodigo">Código de acesso</label>
+        <input id="enCodigo" class="codigo-input" type="text"
+               placeholder="MEAD-XXXX-XXXX-XXXX" maxlength="19" autocomplete="one-time-code" required>
+        <span class="erro">Código inválido.</span>
+      </div>
+      <button type="submit" class="btn btn-ouro btn-bloco" id="enEnviar">Entrar</button>
+    </form>
+
+    <p class="mini centro" style="margin-top:1.3rem">
+      Perdeu o código? Escreva para
+      <a href="mailto:contato@hidromeldereis.com.br">contato@hidromeldereis.com.br</a><br>
+      Ainda não é aluno? <a href="../">Conheça o método</a>
+    </p>
+  </div>
+</div>
+
+<!-- ================================================================= APP -->
+<div class="app oculto" id="app">
+  <div class="veu" id="veu"></div>
+
+  <!-- ------------------------------------------------------------ LATERAL -->
+  <aside class="lateral" id="lateral">
+    <div class="lateral-topo">
+      <img src="../assets/img/logo.svg" alt="" width="38">
+      <span>A ORDEM<br>DO HIDROMEL</span>
+    </div>
+
+    <div class="progresso-caixa">
+      <div class="linha"><span>Seu progresso</span><b id="pctProgresso">0%</b></div>
+      <div class="barra"><i id="barraProgresso" style="width:0%"></i></div>
+      <div class="linha" style="margin:.5rem 0 0"><span id="txtProgresso" class="mini">—</span></div>
+    </div>
+
+    <nav class="lateral-nav">
+      <div class="atalhos">
+        <button class="atalho" data-ir="#/painel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>
+          Painel
+        </button>
+        <button class="atalho" data-ir="#/calculadoras">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8"/></svg>
+          Calculadoras da Ordem
+        </button>
+        <button class="atalho" data-ir="#/material">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v6h6"/></svg>
+          Material para baixar
+        </button>
+        <button class="atalho" data-ir="#/conta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          Meu acesso
+        </button>
+      </div>
+      <div id="navModulos"></div>
+    </nav>
+
+    <div class="lateral-pe">
+      <div class="quem">
+        <div class="av" id="avatar">?</div>
+        <div style="flex:1;min-width:0">
+          <b id="alunoNome">—</b>
+          <span id="alunoPlano">—</span>
+        </div>
+        <button id="btnSair" title="Sair" style="color:var(--fumaca)" aria-label="Sair">
+          <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ----------------------------------------------------------- CONTEÚDO -->
+  <main class="conteudo">
+    <div class="topo-movel">
+      <button class="hamb" id="abrirMenu" aria-label="Abrir menu">☰</button>
+      <b>A ORDEM DO HIDROMEL</b>
+    </div>
+    <div class="pagina" id="pagina"></div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="../assets/js/curso.js"></script>
+</body>
+</html>

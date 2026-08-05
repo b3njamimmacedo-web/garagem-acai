@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+
+<defs><pattern id="fvf" width="45.00" height="51.96" patternUnits="userSpaceOnUse">
+    <polygon points="30.00,0.00 15.00,25.98 -15.00,25.98 -30.00,0.00 -15.00,-25.98 15.00,-25.98" fill="none" stroke="#D4A017" stroke-opacity="0.07" stroke-width="1.1"/>
+    <polygon points="30.00,51.96 15.00,77.94 -15.00,77.94 -30.00,51.96 -15.00,25.98 15.00,25.98" fill="none" stroke="#D4A017" stroke-opacity="0.07" stroke-width="1.1"/>
+    <polygon points="75.00,25.98 60.00,51.96 30.00,51.96 15.00,25.98 30.00,0.00 60.00,0.00" fill="none" stroke="#D4A017" stroke-opacity="0.07" stroke-width="1.1"/>
+    <polygon points="30.00,25.98 15.00,51.96 -15.00,51.96 -30.00,25.98 -15.00,0.00 15.00,0.00" fill="none" stroke="#D4A017" stroke-opacity="0.035" stroke-width="1.1"/>
+  </pattern><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#7A5E14"/>
+    <stop offset="18%"  stop-color="#D4A017"/>
+    <stop offset="38%"  stop-color="#FBE08A"/>
+    <stop offset="52%"  stop-color="#F5C542"/>
+    <stop offset="70%"  stop-color="#B8860B"/>
+    <stop offset="88%"  stop-color="#6F5411"/>
+    <stop offset="100%" stop-color="#A87D18"/>
+  </linearGradient><linearGradient id="gtk" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#FBE08A"/>
+    <stop offset="40%"  stop-color="#F5C542"/>
+    <stop offset="75%"  stop-color="#D4A017"/>
+    <stop offset="100%" stop-color="#A87D18"/>
+  </linearGradient>
+  <radialGradient id="brh" cx="50%" cy="50%" r="50%">
+    <stop offset="0%"   stop-color="#D4A017" stop-opacity="0.34"/>
+    <stop offset="55%"  stop-color="#D4A017" stop-opacity="0.085"/>
+    <stop offset="100%" stop-color="#D4A017" stop-opacity="0"/>
+  </radialGradient><filter id="gri" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" seed="7" result="n"/>
+    <feColorMatrix in="n" type="saturate" values="0" result="ng"/>
+    <feComponentTransfer in="ng" result="nt"><feFuncA type="linear" slope="0.32"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" in2="nt" mode="multiply"/>
+  </filter>
+  <linearGradient id="fj" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#1F160D"/><stop offset="100%" stop-color="#0E0B08"/>
+  </linearGradient></defs>
+<rect width="1200" height="630" fill="url(#fj)"/>
+<rect width="1200" height="630" fill="url(#fvf)"/>
+<ellipse cx="880" cy="315" rx="420" ry="360" fill="url(#brh)"/>
+<rect x="26" y="26" width="1148" height="578" fill="none" stroke="url(#gg)" stroke-width="2"/>
+<g transform="translate(34 34) rotate(0) scale(1.5)" fill="none"
+      stroke="#D4A017" stroke-opacity="0.8" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.4"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#D4A017" fill-opacity="0.6000000000000001" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#D4A017" fill-opacity="0.8" stroke="none"/>
+  </g>
+<g transform="translate(1166 34) rotate(90) scale(1.5)" fill="none"
+      stroke="#D4A017" stroke-opacity="0.8" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.4"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#D4A017" fill-opacity="0.6000000000000001" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#D4A017" fill-opacity="0.8" stroke="none"/>
+  </g>
+<g transform="translate(1166 596) rotate(180) scale(1.5)" fill="none"
+      stroke="#D4A017" stroke-opacity="0.8" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.4"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#D4A017" fill-opacity="0.6000000000000001" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#D4A017" fill-opacity="0.8" stroke="none"/>
+  </g>
+<g transform="translate(34 596) rotate(270) scale(1.5)" fill="none"
+      stroke="#D4A017" stroke-opacity="0.8" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.4"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#D4A017" fill-opacity="0.6000000000000001" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#D4A017" fill-opacity="0.8" stroke="none"/>
+  </g>
+<g transform="translate(820 150) scale(1.1)">
+  <path d="M-13.86,-122.00 Q0.00,-130.00 13.86,-122.00 L98.73,-73.00 Q112.58,-65.00 112.58,-49.00 L112.58,49.00 Q112.58,65.00 98.73,73.00 L13.86,122.00 Q0.00,130.00 -13.86,122.00 L-98.73,73.00 Q-112.58,65.00 -112.58,49.00 L-112.58,-49.00 Q-112.58,-65.00 -98.73,-73.00 Z" fill="none" stroke="url(#gg)" stroke-width="4"/>
+  <g transform="translate(-70 -70) scale(1.4)"><g stroke="#F5C542" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M26 18 h48 l-6 30 a18 18 0 0 1 -36 0z"/>
+    <path d="M50 66 v16 M32 88 h36"/>
+    <path d="M50 66 a18 18 0 0 0 18 -18"/>
+    <path d="M31 34 h38 l-4 14 a15 15 0 0 1 -30 0z" fill="#F5C542" fill-opacity="0.72" stroke="none"/></g></g>
+</g>
+<text x="80" y="188" font-family="Georgia,serif" font-size="17" letter-spacing="8" fill="#D4A017">A BEBIDA MAIS ANTIGA DO MUNDO</text>
+<text x="80" y="278" font-family="Georgia,serif" font-size="78" font-weight="700" fill="url(#gtk)">HIDROMEL</text>
+<text x="80" y="356" font-family="Georgia,serif" font-size="78" font-weight="700" fill="#F3E9D2">DE REIS</text>
+<path d="M80 396 h300" stroke="url(#gg)" stroke-width="3"/>
+<text x="80" y="446" font-family="Georgia,serif" font-size="26" fill="#D9C9A3">Produza. Legalize. Venda.</text>
+<text x="80" y="530" font-family="Georgia,serif" font-size="18" letter-spacing="3" fill="#8A7B62">16 MÓDULOS · 112 AULAS · 30 RECEITAS</text>
+<rect width="1200" height="630" filter="url(#gri)" fill="transparent" opacity="0.45"/>
+
+</svg>

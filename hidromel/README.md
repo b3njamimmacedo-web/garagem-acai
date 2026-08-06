@@ -46,7 +46,8 @@ Na área de membros, use qualquer e-mail e o código `MEAD-DEMO-2026-REIS`.
 |---|---|
 | **16 módulos, 112 aulas** | currículo completo, de "o que é mel" a "como escalar produção" |
 | **30 receitas** | 11 medievais clássicas · 10 premium inusitadas · 9 sazonais |
-| **11 PDFs** | 51 páginas diagramadas, geradas por código |
+| **11 PDFs** | diagramados por código, com processo-base escrito uma vez só |
+| **686 prompts de IA** | imagem e vídeo, com estilo travado para saírem coerentes |
 | **36 SVGs** | arte autoral, gerada por código — nenhuma imagem licenciada |
 | **5 calculadoras** | mosto, ABV, nutriente TOSNA, backsweetening, precificação |
 | **Backend completo** | Pix e cartão, webhook assinado, credencial única, e-mail |
@@ -72,6 +73,7 @@ hidromel/
 │   │   └── calculadoras.js as cinco calculadoras
 │   └── img/                36 SVGs gerados
 ├── material/               11 PDFs gerados
+├── producao/               briefing de IA: 686 prompts + 112 roteiros
 ├── api/
 │   ├── worker.js           backend inteiro, arquivo único
 │   ├── wrangler.toml
@@ -82,6 +84,7 @@ hidromel/
 │   ├── gerar_legal.py           gera termos/privacidade/reembolso
 │   ├── receitas.py              conteúdo das 30 receitas
 │   ├── analisar-producao.mjs    custo de produção dos vídeos
+│   ├── gerar-briefing-ia.mjs    prompts de IA + roteiros de narração
 │   ├── testar-calculadoras.mjs  22 testes
 │   └── testar-worker.mjs        62 testes
 ├── docs/
@@ -102,6 +105,8 @@ hidromel/
 node scripts/gerar-arte.mjs          # 36 SVGs
 python3 scripts/gerar_pdfs.py        # 11 PDFs
 python3 scripts/gerar_legal.py       # 3 páginas legais
+node scripts/gerar-briefing-ia.mjs   # prompts de IA e roteiros
+node scripts/analisar-producao.mjs   # custo de produção de vídeo
 
 node scripts/testar-calculadoras.mjs # 22 testes
 node scripts/testar-worker.mjs       # 62 testes

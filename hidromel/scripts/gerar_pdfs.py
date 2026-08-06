@@ -10,6 +10,7 @@ Uso:  python3 scripts/gerar_pdfs.py
 """
 
 import os
+import re
 import math
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -67,6 +68,10 @@ E = {
                         leftIndent=8, borderPadding=0),
     "passo":     estilo("passo", fontSize=10, leading=14.5, leftIndent=16,
                         firstLineIndent=-16, spaceAfter=4.5),
+    "passoId":   estilo("passoId", fontName="Helvetica-Bold", fontSize=9.5,
+                        leading=15, textColor=OURO),
+    "baseRef":   estilo("baseRef", fontSize=8.8, leading=13.5,
+                        textColor=colors.HexColor("#4A3A26")),
     "nota":      estilo("nota", fontName="Times-Italic", fontSize=9.5, leading=13.5,
                         textColor=colors.HexColor("#4A3A26"), leftIndent=10, spaceBefore=4),
     "mini":      estilo("mini", fontName="Helvetica", fontSize=8, leading=11,
@@ -142,7 +147,9 @@ class Fundo:
     """Desenha capa e miolo. Instanciado por documento para carregar o título."""
 
     def __init__(self, titulo, subtitulo, rotulo="GRIMÓRIO"):
-        self.titulo = titulo
+        # O título da capa carrega markup (<br/> para quebrar a linha grande).
+        # Cabeçalho e metadados são texto puro — sem isto sai "CHECKLIST DE<BR/>".
+        self.titulo = re.sub(r"<[^>]+>", " ", titulo).strip()
         self.subtitulo = subtitulo
         self.rotulo = rotulo
 
@@ -231,10 +238,11 @@ class Fundo:
 
 class Doc(BaseDocTemplate):
     def __init__(self, arquivo, titulo, subtitulo, rotulo="GRIMÓRIO", **kw):
+        titulo_limpo = re.sub(r"<[^>]+>", " ", titulo).strip()
         BaseDocTemplate.__init__(self, arquivo, pagesize=A4,
                                  leftMargin=MARGEM, rightMargin=MARGEM,
                                  topMargin=24 * mm, bottomMargin=20 * mm,
-                                 title=titulo, author="Hidromel de Reis",
+                                 title=titulo_limpo, author="Hidromel de Reis",
                                  subject=subtitulo, **kw)
         f = Fundo(titulo, subtitulo, rotulo)
         quadro = Frame(MARGEM, 20 * mm, L - 2 * MARGEM, A - 44 * mm, id="normal")
@@ -246,6 +254,41 @@ class Doc(BaseDocTemplate):
         ])
 
 
+# --------------------------------------------------------------- CARACTERES
+#
+# As fontes padrão do PDF (Times, Helvetica) usam WinAnsi e NÃO têm glifo para
+# subscrito, seta, checkbox e afins — o reportlab desenha um quadrado preto no
+# lugar, silenciosamente. Registrar uma TTF não resolve: a Vera que vem com o
+# reportlab cobre só 3 dos 7 caracteres usados aqui.
+#
+# Então trocamos por equivalentes que a fonte tem, usando markup do reportlab
+# onde ele melhora o resultado (<sub> para subscrito).
+SUBSTITUICOES = {
+    "₀": "<sub>0</sub>", "₁": "<sub>1</sub>", "₂": "<sub>2</sub>",
+    "₃": "<sub>3</sub>", "₄": "<sub>4</sub>",
+    "−": "–",     # sinal de menos -> travessão curto
+    "→": "»",
+    "≈": "~",
+    "ł": "l",
+    "✓": "OK",
+    "☐": "",      # a caixa é desenhada pela tabela, não escrita como glifo
+}
+CAIXA = "☐"
+
+
+def txt(s):
+    """Deixa o texto seguro para as fontes padrão do PDF."""
+    s = str(s)
+    for de, para in SUBSTITUICOES.items():
+        s = s.replace(de, para)
+    return s
+
+
+def P(conteudo, estilo):
+    """Paragraph com o texto já sanitizado. Use SEMPRE no lugar de Paragraph."""
+    return Paragraph(txt(conteudo), estilo)
+
+
 # ----------------------------------------------------------------- HELPERS
 def regua(cor=OURO, largura=1, espaco=8):
     t = Table([[""]], colWidths=[L - 2 * MARGEM], rowHeights=[0.1])
@@ -254,7 +297,7 @@ def regua(cor=OURO, largura=1, espaco=8):
 
 
 def caixa(texto, corFundo, corBorda, estiloTxt="corpo"):
-    p = Paragraph(texto, E[estiloTxt])
+    p = P(texto, E[estiloTxt])
     t = Table([[p]], colWidths=[L - 2 * MARGEM])
     t.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), corFundo),
@@ -268,6 +311,21 @@ def caixa(texto, corFundo, corBorda, estiloTxt="corpo"):
 
 
 def tabela(dados, larguras, cabecalho=True):
+    # Onde havia "☐", desenhamos uma caixa de verdade com a borda da célula —
+    # imprime melhor que qualquer glifo e não depende de fonte.
+    caixas = []
+    limpos = []
+    for li, linha in enumerate(dados):
+        nova = []
+        for ci, celula in enumerate(linha):
+            if isinstance(celula, str) and celula.strip() == CAIXA:
+                caixas.append((ci, li))
+                nova.append("")
+            else:
+                nova.append(txt(celula) if isinstance(celula, str) else celula)
+        limpos.append(nova)
+    dados = limpos
+
     t = Table(dados, colWidths=larguras, repeatRows=1 if cabecalho else 0)
     estilos = [
         ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
@@ -288,6 +346,14 @@ def tabela(dados, larguras, cabecalho=True):
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
             ("FONTSIZE", (0, 0), (-1, 0), 8),
         ]
+    for cel in caixas:
+        estilos += [
+            ("BOX", cel, cel, 0.9, colors.HexColor("#8A6D1F")),
+            ("TOPPADDING", cel, cel, 7),
+            ("BOTTOMPADDING", cel, cel, 7),
+            ("LEFTPADDING", cel, cel, 9),
+            ("RIGHTPADDING", cel, cel, 9),
+        ]
     t.setStyle(TableStyle(estilos))
     return t
 
@@ -295,11 +361,11 @@ def tabela(dados, larguras, cabecalho=True):
 def capa_conteudo(titulo, subtitulo, rodape):
     return [
         Spacer(1, 6 * mm),
-        Paragraph(titulo.upper(), E["capaTit"]),
+        P(titulo.upper(), E["capaTit"]),
         Spacer(1, 5 * mm),
-        Paragraph(subtitulo, E["capaSub"]),
+        P(subtitulo, E["capaSub"]),
         Spacer(1, 14 * mm),
-        Paragraph(rodape, E["capaRot"]),
+        P(rodape, E["capaRot"]),
         NextPageTemplate("miolo"),
         PageBreak(),
     ]
@@ -318,15 +384,15 @@ def grimorio():
     )
 
     # ---- abertura
-    h.append(Paragraph("Como usar este grimório", E["h1"]))
+    h.append(P("Como usar este grimório", E["h1"]))
     h += regua()
-    h.append(Paragraph(
+    h.append(P(
         "Toda receita aqui é para <b>20 litros</b> e traz a densidade inicial (OG), a "
         "densidade final esperada (FG) e o teor alcoólico calculado. Para outro volume, "
         "use a calculadora de escalonamento na área de membros — as proporções são "
         "lineares, mas o tempo de fermentação não é: lotes maiores fermentam mais devagar.",
         E["corpo"]))
-    h.append(Paragraph(
+    h.append(P(
         "A OG foi calculada considerando que <b>1 kg de mel em 1 litro de mosto final "
         "acrescenta 292 pontos de densidade</b>. É a conversão correta do valor de "
         "referência da literatura (35 pontos por libra por galão) para o sistema métrico. "
@@ -349,9 +415,49 @@ def grimorio():
         "e no Manual de Legalização.",
         colors.HexColor("#EDF3F0"), VERDE))
 
+    # ---- processo-base, impresso UMA vez
+    h.append(PageBreak())
+    h.append(P("REFERÊNCIA", E["rot"]))
+    h.append(P("O Processo-Base", E["titulo"]))
+    h.append(P("Os doze passos comuns a todas as receitas", E["sub"]))
+    h += regua()
+    h.append(P(
+        "Fazer hidromel é sempre o mesmo processo. O que muda de uma receita para "
+        "outra é <b>só a adição</b> — fruta, especiaria, madeira, malte ou mel "
+        "caramelizado. Por isso o processo comum está aqui, uma vez, e cada receita "
+        "adiante diz apenas <b>quais destes passos usar</b> e <b>o que muda</b>.",
+        E["corpo"]))
+    h.append(P(
+        "Marque esta página. Você vai voltar a ela nas primeiras dez receitas e "
+        "depois nunca mais — que é exatamente o objetivo.",
+        E["corpo"]))
+    h.append(Spacer(1, 8))
+
+    for pid, titulo, texto in R.PROCESSO_BASE:
+        bloco = Table(
+            [[P(f'<b>{pid}</b>', E["passoId"]),
+              P(f'<b>{titulo}.</b> {texto}', E["corpo"])]],
+            colWidths=[13 * mm, L - 2 * MARGEM - 13 * mm])
+        bloco.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (0, 0), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 3),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ("LINEBELOW", (0, 0), (-1, -1), 0.3, colors.HexColor("#E2D6B4")),
+        ]))
+        h.append(KeepTogether(bloco))
+
+    h.append(Spacer(1, 10))
+    h.append(caixa(
+        "<b>Como ler as receitas adiante.</b> Cada uma começa com a faixa "
+        "<b>PROCESSO-BASE</b>, listando os passos desta página que ela usa, na ordem. "
+        "Logo abaixo vem <b>O QUE MUDA</b> — e é só isso que você precisa ler depois "
+        "que o processo-base estiver na cabeça.",
+        colors.HexColor("#EDF3F0"), VERDE))
+
     # ---- índice
     h.append(PageBreak())
-    h.append(Paragraph("Índice", E["h1"]))
+    h.append(P("Índice", E["h1"]))
     h += regua()
     linhas = [["#", "Receita", "Estilo", "ABV"]]
     n = 0
@@ -367,14 +473,14 @@ def grimorio():
     # ---- receitas
     def bloco_receita(r, numero, secao):
         el = [
-            Paragraph(f"{secao} &nbsp;·&nbsp; RECEITA {numero:02d}", E["rot"]),
-            Paragraph(r["nome"], E["titulo"]),
-            Paragraph(r["sub"], E["sub"]),
+            P(f"{secao} &nbsp;·&nbsp; RECEITA {numero:02d}", E["rot"]),
+            P(r["nome"], E["titulo"]),
+            P(r["sub"], E["sub"]),
         ]
         el += regua(espaco=4)
-        el.append(Paragraph(f'<b>Origem:</b> {r["origem"]}', E["mini"]))
+        el.append(P(f'<b>Origem:</b> {r["origem"]}', E["mini"]))
         el.append(Spacer(1, 7))
-        el.append(Paragraph(r["historia"], E["historia"]))
+        el.append(P(r["historia"], E["historia"]))
         el.append(Spacer(1, 9))
 
         # ficha
@@ -389,15 +495,23 @@ def grimorio():
         el.append(tabela(ficha, larg))
         el.append(Spacer(1, 11))
 
-        el.append(Paragraph("Ingredientes", E["h2"]))
+        el.append(P("Ingredientes", E["h2"]))
         el.append(tabela([["Item", "Quantidade"]] +
                          [[i, q] for i, q in r["ingredientes"]],
                          [110 * mm, 52 * mm]))
         el.append(Spacer(1, 11))
 
-        el.append(Paragraph("Modo de fazer", E["h2"]))
+        # faixa do processo-base: quais passos da página de referência entram
+        if r.get("base"):
+            nomes = " · ".join(f"<b>{b}</b> {R.BASE_POR_ID[b][1]}" for b in r["base"])
+            el.append(P("PROCESSO-BASE", E["rot"]))
+            el.append(caixa(nomes, colors.HexColor("#F1EADA"),
+                            colors.HexColor("#C9B072"), "baseRef"))
+            el.append(Spacer(1, 9))
+
+        el.append(P("O que muda", E["h2"]))
         for i, passo in enumerate(r["passos"], 1):
-            el.append(Paragraph(f"<b>{i}.</b>&nbsp;&nbsp;{passo}", E["passo"]))
+            el.append(P(f"<b>{i}.</b>&nbsp;&nbsp;{passo}", E["passo"]))
 
         el.append(Spacer(1, 7))
         el.append(caixa("<b>Nota do mestre.</b> " + r["nota"],
@@ -414,11 +528,11 @@ def grimorio():
         h += bloco_receita(r, num, "LINHA PREMIUM")
 
     # ---- sazonais
-    h.append(Paragraph("SAZONAIS", E["rot"]))
-    h.append(Paragraph("Nove receitas de calendário", E["titulo"]))
-    h.append(Paragraph("Produção planejada para o pico de venda", E["sub"]))
+    h.append(P("SAZONAIS", E["rot"]))
+    h.append(P("Nove receitas de calendário", E["titulo"]))
+    h.append(P("Produção planejada para o pico de venda", E["sub"]))
     h += regua()
-    h.append(Paragraph(
+    h.append(P(
         "Hidromel leva meses. Quem começa a produzir o hidromel de Natal em novembro "
         "não vende no Natal. Estas nove receitas existem para amarrar produção a "
         "calendário — a formulação segue a lógica das anteriores; o que muda é "
@@ -463,9 +577,9 @@ def manual():
     h.append(Spacer(1, 10))
 
     # ---- panorama
-    h.append(Paragraph("Parte I — O mapa da burocracia", E["h1"]))
+    h.append(P("Parte I — O mapa da burocracia", E["h1"]))
     h += regua()
-    h.append(Paragraph(
+    h.append(P(
         "Produzir hidromel em casa, para consumo próprio ou para presentear, "
         "<b>não exige autorização nenhuma</b>. A partir do momento em que existe venda, "
         "o produto passa a ser bebida sob competência do Ministério da Agricultura e "
@@ -492,9 +606,9 @@ def manual():
         colors.HexColor("#F6EFDC"), OURO))
 
     # ---- CNPJ
-    h.append(Paragraph("Parte II — CNPJ: o MEI não serve", E["h1"]))
+    h.append(P("Parte II — CNPJ: o MEI não serve", E["h1"]))
     h += regua()
-    h.append(Paragraph(
+    h.append(P(
         "Esta é a dúvida mais frequente, e a resposta é direta: <b>a fabricação de "
         "bebida alcoólica não está na lista de ocupações permitidas ao MEI</b>. "
         "Não é questão de faturamento — a atividade em si está fora.",
@@ -508,7 +622,7 @@ def manual():
         ["Lucro Presumido", "Sim", "Costuma compensar acima do teto do Simples"],
     ], [34 * mm, 30 * mm, 98 * mm]))
     h.append(Spacer(1, 8))
-    h.append(Paragraph("CNAEs usados no setor", E["h2"]))
+    h.append(P("CNAEs usados no setor", E["h2"]))
     h.append(tabela([
         ["CNAE", "Descrição", "Uso"],
         ["1113-5/02", "Fabricação de vinho", "Usado por produtores de fermentados de fruta e mel"],
@@ -525,7 +639,7 @@ def manual():
 
     # ---- rotulagem
     h.append(PageBreak())
-    h.append(Paragraph("Parte III — Rótulo: o que é obrigatório", E["h1"]))
+    h.append(P("Parte III — Rótulo: o que é obrigatório", E["h1"]))
     h += regua()
     h.append(tabela([
         ["Elemento", "Obrigatório", "Detalhe"],
@@ -557,9 +671,9 @@ def manual():
 
     # ---- precificação
     h.append(PageBreak())
-    h.append(Paragraph("Parte IV — A conta que decide tudo", E["h1"]))
+    h.append(P("Parte IV — A conta que decide tudo", E["h1"]))
     h += regua()
-    h.append(Paragraph(
+    h.append(P(
         "O erro mais caro do produtor iniciante é precificar multiplicando o custo por "
         "três. Parece seguro e não é: imposto e comissão incidem sobre o <b>preço</b>, "
         "não sobre o custo. Quem multiplica por três e depois desconta 12% de imposto e "
@@ -567,14 +681,14 @@ def manual():
         "da que imaginava.",
         E["corpo"]))
     h.append(Spacer(1, 6))
-    h.append(Paragraph("A fórmula correta — markup divisor", E["h2"]))
+    h.append(P("A fórmula correta — markup divisor", E["h2"]))
     h.append(caixa(
         '<para alignment="center"><font face="Times-Bold" size="13">'
         'preço = custo ÷ [ 1 − (imposto% + comissão% + margem%) ÷ 100 ]'
         '</font></para>',
         colors.HexColor("#F6EFDC"), OURO))
     h.append(Spacer(1, 8))
-    h.append(Paragraph("Exemplo completo — lote de 20 litros", E["h2"]))
+    h.append(P("Exemplo completo — lote de 20 litros", E["h2"]))
     h.append(tabela([
         ["Item", "Cálculo", "Valor"],
         ["Mel (6 kg × R$ 32)", "insumo", "R$ 192,00"],
@@ -600,8 +714,8 @@ def manual():
         colors.HexColor("#EDF3F0"), VERDE))
 
     h.append(Spacer(1, 10))
-    h.append(Paragraph("Preço por canal", E["h2"]))
-    h.append(Paragraph(
+    h.append(P("Preço por canal", E["h2"]))
+    h.append(P(
         "A mesma garrafa tem preços diferentes conforme o canal — e a tabela precisa "
         "ser montada de trás para frente, partindo do preço na prateleira, para você "
         "não brigar com o próprio revendedor.", E["corpo"]))
@@ -622,7 +736,7 @@ def manual():
         colors.HexColor("#F6EFDC"), OURO))
 
     # ---- ponto de equilíbrio
-    h.append(Paragraph("Parte V — Ponto de equilíbrio", E["h1"]))
+    h.append(P("Parte V — Ponto de equilíbrio", E["h1"]))
     h += regua()
     h.append(tabela([
         ["Custo fixo mensal", "Lucro por garrafa", "Garrafas/mês para empatar", "Litros"],
@@ -660,8 +774,8 @@ def fichas():
     def linhas_vazias(n, larguras, cabecalho):
         return tabela([cabecalho] + [[""] * len(cabecalho) for _ in range(n)], larguras)
 
-    h.append(Paragraph("FICHA 1", E["rot"]))
-    h.append(Paragraph("Identificação do lote", E["titulo"]))
+    h.append(P("FICHA 1", E["rot"]))
+    h.append(P("Identificação do lote", E["titulo"]))
     h += regua()
     h.append(tabela([
         ["Campo", "Preencher"],
@@ -672,17 +786,17 @@ def fichas():
     ], [62 * mm, 100 * mm]))
 
     h.append(Spacer(1, 12))
-    h.append(Paragraph("FICHA 2", E["rot"]))
-    h.append(Paragraph("Registro diário", E["titulo"]))
+    h.append(P("FICHA 2", E["rot"]))
+    h.append(P("Registro diário", E["titulo"]))
     h += regua()
     h.append(linhas_vazias(20, [16 * mm, 20 * mm, 24 * mm, 20 * mm, 18 * mm, 64 * mm],
                            ["Dia", "Data", "Densidade", "Temp. °C", "pH", "Observações (cheiro, atividade, cor)"]))
 
     h.append(PageBreak())
-    h.append(Paragraph("FICHA 3", E["rot"]))
-    h.append(Paragraph("Cronograma de nutriente (TOSNA)", E["titulo"]))
+    h.append(P("FICHA 3", E["rot"]))
+    h.append(P("Cronograma de nutriente (TOSNA)", E["titulo"]))
     h += regua()
-    h.append(Paragraph(
+    h.append(P(
         "Divida a dose total em quatro adições iguais. A quarta acontece quando a "
         "densidade tiver caído um terço do caminho entre a OG e a FG — não em data fixa.",
         E["corpo"]))
@@ -696,17 +810,17 @@ def fichas():
     ], [20 * mm, 56 * mm, 24 * mm, 30 * mm, 32 * mm]))
 
     h.append(Spacer(1, 12))
-    h.append(Paragraph("FICHA 4", E["rot"]))
-    h.append(Paragraph("Trasfegas e adições", E["titulo"]))
+    h.append(P("FICHA 4", E["rot"]))
+    h.append(P("Trasfegas e adições", E["titulo"]))
     h += regua()
     h.append(linhas_vazias(10, [24 * mm, 26 * mm, 46 * mm, 66 * mm],
                            ["Data", "Densidade", "Operação", "O que foi adicionado / retirado"]))
 
     h.append(PageBreak())
-    h.append(Paragraph("FICHA 5", E["rot"]))
-    h.append(Paragraph("Avaliação sensorial", E["titulo"]))
+    h.append(P("FICHA 5", E["rot"]))
+    h.append(P("Avaliação sensorial", E["titulo"]))
     h += regua()
-    h.append(Paragraph(
+    h.append(P(
         "Avalie sempre às cegas e sempre com a amostra a 12–14 °C. Frio demais esconde "
         "defeito; quente demais inventa defeito que não existe.", E["corpo"]))
     h.append(Spacer(1, 6))
@@ -725,7 +839,7 @@ def fichas():
     ], [44 * mm, 9 * mm, 9 * mm, 9 * mm, 9 * mm, 9 * mm, 73 * mm]))
 
     h.append(Spacer(1, 10))
-    h.append(Paragraph("Defeitos — marque o que identificar", E["h2"]))
+    h.append(P("Defeitos — marque o que identificar", E["h2"]))
     h.append(tabela([
         ["Defeito", "Como se apresenta", "Presente?"],
         ["H₂S (enxofre)", "ovo podre, fósforo queimado", ""],
@@ -752,11 +866,11 @@ def material(nome_arq, titulo, subtitulo, rotulo, blocos):
     for b in blocos:
         tipo = b[0]
         if tipo == "h1":
-            h.append(Paragraph(b[1], E["h1"])); h += regua()
+            h.append(P(b[1], E["h1"])); h += regua()
         elif tipo == "h2":
-            h.append(Paragraph(b[1], E["h2"]))
+            h.append(P(b[1], E["h2"]))
         elif tipo == "p":
-            h.append(Paragraph(b[1], E["corpo"]))
+            h.append(P(b[1], E["corpo"]))
         elif tipo == "tab":
             h.append(tabela(b[1], b[2])); h.append(Spacer(1, 8))
         elif tipo == "aviso":
@@ -968,7 +1082,7 @@ MATERIAIS = [
             ("h1", "Etapa 2 — Estrutura física"),
             ("tab", [
                 ["Feito", "Item", "Onde"],
-                ["☐", "Planta baixa com fluxo sujo→limpo", "arquiteto / RT"],
+                ["☐", "Planta baixa com fluxo do sujo para o limpo", "arquiteto / RT"],
                 ["☐", "Área de produção separada de área doméstica", "—"],
                 ["☐", "Piso, parede e teto laváveis", "—"],
                 ["☐", "Ponto de água potável com laudo", "—"],

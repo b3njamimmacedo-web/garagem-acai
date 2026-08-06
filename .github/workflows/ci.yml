@@ -90,11 +90,11 @@ jobs:
         working-directory: hidromel
         run: python3 scripts/gerar_pdfs.py
 
-      - name: Conferir que abrem e não estão vazios
+      - name: Conferir que abrem, têm texto e nada de glifo quebrado
         working-directory: hidromel
         run: |
           python3 - <<'PY'
-          import glob, sys
+          import glob, sys, re
           from pypdf import PdfReader
 
           arquivos = sorted(glob.glob("material/*.pdf"))
@@ -102,18 +102,34 @@ jobs:
 
           falhas = []
           for f in arquivos:
-              paginas = len(PdfReader(f).pages)
-              texto = (PdfReader(f).pages[1].extract_text() or "").strip()
+              r = PdfReader(f)
+              paginas = len(r.pages)
+              texto = (r.pages[1].extract_text() or "").strip()
               print(f"  {f:<48} {paginas:3d} páginas")
+
               if paginas < 2:
                   falhas.append(f"{f}: só {paginas} página(s)")
               if not texto:
                   falhas.append(f"{f}: primeira página de miolo sem texto")
 
+              # Fontes padrão do PDF são WinAnsi. Qualquer caractere fora disso
+              # vira um quadrado preto na página, sem erro nenhum no build.
+              todo = "".join((p.extract_text() or "") for p in r.pages)
+              fora = sorted({c for c in todo if not c.encode("cp1252", "ignore")})
+              if fora:
+                  falhas.append(f"{f}: caracteres sem glifo -> {fora}")
+
+              # Markup do título da capa não pode vazar para cabeçalho/metadados
+              if re.search(r"<\s*br\s*/?\s*>", todo, re.I):
+                  falhas.append(f"{f}: markup HTML visível no texto")
+              if r.metadata.title and "<" in r.metadata.title:
+                  falhas.append(f"{f}: markup no título do PDF")
+
           if falhas:
-              print("\n".join(falhas), file=sys.stderr)
+              print("\nFALHAS:", file=sys.stderr)
+              print("\n".join("  " + x for x in falhas), file=sys.stderr)
               sys.exit(1)
-          print("\nTodos os 11 PDFs abrem, têm miolo e contêm texto.")
+          print("\nTodos os 11 PDFs abrem, têm miolo, texto e nenhum glifo quebrado.")
           PY
 
   # ---------------------------------------------------------------------------

@@ -7,7 +7,88 @@ Quem for revisar receita não precisa encostar em código de layout.
 
 Todas as formulações são para 20 L, com OG calculada em 292 pontos por kg de
 mel por litro (ver assets/js/calculadoras.js para a dedução dessa constante).
+
+ESTRUTURA MODULAR
+-----------------
+O processo de fazer hidromel é idêntico em toda receita: sanitizar, dissolver o
+mel, medir a OG, reidratar a levedura, inocular, nutriente escalonado, trasfegar,
+maturar, engarrafar. O que muda é só a ADIÇÃO.
+
+Por isso o processo comum vive uma única vez em PROCESSO_BASE, e cada receita
+declara:
+
+    base   quais passos do processo-base ela usa, na ordem  -> ['P1','P2',...]
+    passos APENAS o que muda em relação à base
+
+No PDF, o processo-base é impresso uma vez como cartão de referência, e cada
+receita cabe em UMA página — o que importa quando o papel está na bancada, ao
+lado do fermentador, e você não quer virar folha com a mão suja de mel.
+
+Consertar a instrução de sanitização passa a ser uma edição, não 22.
 """
+
+# ---------------------------------------------------------------------------
+# PROCESSO-BASE — impresso uma vez, referenciado por todas as receitas
+# ---------------------------------------------------------------------------
+
+PROCESSO_BASE = [
+    ("P1", "Sanitizar",
+     "Star San a 1,5 mL/L, 60 segundos de contato, em tudo que vai encostar no "
+     "mosto: fermentador, airlock, colher, funil, proveta, densímetro e mangueira. "
+     "Não enxague. Limpar não é sanitizar — um fermentador visualmente impecável "
+     "e não sanitizado contamina o lote igual."),
+
+    ("P2", "Dissolver o mel",
+     "Em metade do volume de água morna, nunca acima de 40 °C. Acima disso os "
+     "aromas voláteis do mel evaporam e você perde justamente o que pagou caro. "
+     "Mexa até não restar mel no fundo."),
+
+    ("P3", "Completar o volume e medir a OG",
+     "Complete com água fria até o volume final. Homogeneíze bem antes de medir — "
+     "mosto mal misturado dá leitura falsa. Anote a OG na ficha de fermentação."),
+
+    ("P4", "Conferir o pH",
+     "Alvo entre 3,6 e 4,0 no início. Abaixo de 3,2 a fermentação trava. Corrija "
+     "com carbonato de cálcio (sobe) ou ácido tartárico (desce)."),
+
+    ("P5", "Reidratar a levedura",
+     "20x o peso da levedura em água a 40 °C, com Go-Ferm na proporção de 1,25 g "
+     "por grama de levedura. Espere 15 min sem mexer, depois agite de leve. "
+     "Jogar o sachê seco direto no mosto desperdiça metade das células."),
+
+    ("P6", "Igualar a temperatura e inocular",
+     "Aproxime a temperatura do fermento à do mosto em etapas de 5 °C a cada 5 min. "
+     "Diferença acima de 10 °C mata metade das células — é a causa silenciosa de "
+     "fermentação lenta e cheiro de enxofre no terceiro dia. Inocule e feche com airlock."),
+
+    ("P7", "Nutriente escalonado (TOSNA)",
+     "Fermaid-O dividido em 4 adições iguais: 24 h, 48 h, 72 h e ao atingir 1/3 da "
+     "queda de densidade. Mel é pobre em nitrogênio; levedura com fome produz H₂S. "
+     "Use a calculadora da área de membros para a dose do seu volume."),
+
+    ("P8", "Degassing diário",
+     "Agite ou mexa uma vez por dia até o 7º dia, para liberar o CO₂ dissolvido. "
+     "CO₂ preso inibe a levedura e segura aromas indesejados."),
+
+    ("P9", "Trasfegar",
+     "Quando a densidade estiver estável em 3 leituras seguidas. Sifone sem "
+     "respingar e sem puxar borra — oxigênio nesta fase oxida o lote."),
+
+    ("P10", "Maturar",
+     "No mínimo 60 dias, em local escuro e fresco, com o mínimo de headspace. "
+     "Hidromel jovem tem gosto de álcool. Não é defeito, é pressa."),
+
+    ("P11", "Estabilizar (só se for adoçar ou se houver açúcar residual)",
+     "Sorbato de potássio 200 ppm + metabissulfito de potássio na dose calculada "
+     "pelo pH. Espere 24 h antes de qualquer adição doce. Adoçar sem estabilizar "
+     "refermenta na garrafa — e garrafa de vidro sob pressão é estilhaço."),
+
+    ("P12", "Engarrafar",
+     "Garrafa e rolha sanitizadas, headspace de 2 cm, arrolhar na hora. "
+     "Registre o lote e a data na ficha."),
+]
+
+BASE_POR_ID = {p[0]: p for p in PROCESSO_BASE}
 
 # ---------------------------------------------------------------------------
 # MEDIEVAIS CLÁSSICAS — as onze categorias históricas
@@ -32,17 +113,12 @@ MEDIEVAIS = [
             ("Go-Ferm", "12,5 g"),
             ("Fermaid-O (TOSNA, 4 adições)", "21 g no total"),
         ],
+        "base": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Sanitize tudo o que vai encostar no mosto. Star San a 1,5 mL/L, 60 segundos de contato.",
-            "Dissolva o mel em 8 L de água morna (não passe de 40 °C — acima disso os aromas voláteis evaporam).",
-            "Complete até 20 L com água fria. Meça a OG: deve ficar em 1,088 (±0,003).",
-            "Reidrate a levedura em 125 mL de água a 40 °C com o Go-Ferm. Espere 20 min.",
-            "Iguale a temperatura do fermento à do mosto antes de inocular — diferença acima de 10 °C mata metade das células.",
+            "Esta é a receita-base pura: nada entra além de mel, água e levedura. Todos os passos são os do processo-base, sem nenhuma adição.",
+            "Alvo: 6,0 kg de mel em 20 L dão OG 1,088 (±0,003).",
             "Fermente entre 18 e 20 °C.",
-            "Nutriente escalonado: 5,3 g às 24 h, 48 h e 72 h, e a última dose quando a densidade tiver caído 1/3.",
-            "Faça degassing diário até o 7º dia.",
-            "Trasfegue aos 21 dias, ou quando a densidade estiver estável por 3 leituras seguidas.",
-            "Maturação: 60 dias no mínimo. Aos 90 fica outro produto.",
+            "Trasfegue aos 21 dias; maturação de 60 dias no mínimo, 90 se tiver paciência.",
         ],
         "nota": (
             "Quem prova hidromel jovem e acha que “tem gosto de álcool” está provando "
@@ -69,13 +145,14 @@ MEDIEVAIS = [
             ("Levedura Lalvin D47", "10 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Monte o mosto como no Show Mead. Fermente limpo, SEM especiaria nenhuma.",
-            "Só depois da fermentação primária: faça um chá frio das especiarias em 500 mL de hidromel do próprio lote, por 48 h.",
-            "Prove esse extrato a cada 12 h. É ele que dita a intensidade.",
-            "Misture o extrato coado ao lote inteiro, aos poucos, provando entre as adições.",
-            "Pare quando as especiarias aparecerem no fim do gole, não no começo.",
-            "Maturação mínima de 90 dias: especiaria jovem é agressiva e se harmoniza com o tempo.",
+            "Fermente limpo, SEM especiaria nenhuma na primária. O CO₂ arrasta os aromáticos para fora e o que sobra é o amargor.",
+            "Terminada a primária, faça um chá frio das especiarias em 500 mL do próprio lote, por 48 h.",
+            "Prove o extrato a cada 12 h — é ele que dita a intensidade, não o relógio.",
+            "Misture o extrato coado ao lote aos poucos, provando entre as adições.",
+            "Pare quando as especiarias aparecerem no FIM do gole, não no começo.",
+            "Estenda a maturação (P10) para 90 dias: especiaria jovem é agressiva e se harmoniza com o tempo.",
         ],
         "nota": (
             "Adicionar especiaria na primária é o erro mais comum. O CO₂ arrasta os "
@@ -100,14 +177,14 @@ MEDIEVAIS = [
             ("Pectinase", "2 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Congele e descongele a fruta: o gelo rompe as células e libera muito mais suco e cor.",
-            "Fermente o hidromel base sozinho até a densidade cair pela metade.",
-            "Só então adicione a fruta, em saco de malha, na fermentação secundária.",
-            "Adicione a pectinase junto com a fruta, para evitar turbidez permanente por pectina.",
-            "Deixe 10 a 14 dias em contato. Prove a partir do 7º.",
-            "Retire o saco sem espremer — espremer extrai tanino da semente e traz adstringência.",
-            "Trasfegue e deixe clarificar a frio por 30 dias.",
+            "Congele e descongele a fruta 48 h antes: o gelo rompe as células e libera muito mais suco e cor.",
+            "Espere a densidade cair pela metade antes de adicionar qualquer fruta.",
+            "Fruta em saco de malha, na secundária, junto com 2 g de pectinase (evita turbidez permanente).",
+            "10 a 14 dias de contato. Prove a partir do 7º.",
+            "Retire o saco SEM espremer — espremer extrai tanino da semente e traz adstringência.",
+            "Clarifique a frio por 30 dias depois de retirar a fruta.",
         ],
         "nota": (
             "Fruta na primária perde 40% do aroma pelo arraste de CO₂. Fruta na "
@@ -131,12 +208,12 @@ MEDIEVAIS = [
             ("Levedura Lalvin 71B", "10 g"),
             ("Ácido málico", "a ajustar para pH 3,4"),
         ],
+        "base": ["P1", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Confira o rótulo do suco: sorbato ou benzoato impedem a fermentação. Se tiver, não serve.",
-            "Misture mel e suco. Complete com água até 20 L.",
-            "Ajuste o pH para 3,4–3,6 antes de inocular.",
-            "Fermente a 16–18 °C — o frio preserva o éster de maçã.",
-            "Trasfegue aos 30 dias e maturação de 60.",
+            "Confira o rótulo do suco antes de comprar: sorbato ou benzoato impedem a fermentação. Se tiver, não serve.",
+            "No lugar de P2 e P3: dissolva o mel direto nos 12 L de suco de maçã e complete com água até 20 L.",
+            "Ajuste o pH para 3,4–3,6 — mais baixo que o padrão do processo-base.",
+            "Fermente a 16–18 °C. O frio preserva o éster de maçã, que é o motivo de fazer cyser.",
         ],
         "nota": (
             "O cyser é o hidromel que mais converte cliente novo: o paladar reconhece "
@@ -160,12 +237,12 @@ MEDIEVAIS = [
             ("Tanino enológico", "2 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P4", "P5", "P6", "P7", "P8", "P9", "P12"],
         "passos": [
-            "Misture mel e suco de uva; complete com água.",
-            "Adicione o tanino no mosto — ele dá estrutura e ajuda na clarificação.",
-            "Fermente a 22–24 °C: a RC-212 é cepa tinta e trabalha mais quente.",
-            "Trasfegue aos 21 dias.",
-            "Envelheça com carvalho francês em cubos, 6 g/L, por 45 dias.",
+            "No lugar de P2 e P3: dissolva o mel nos 10 L de suco de uva e complete com água até 20 L.",
+            "Adicione 2 g de tanino enológico ao mosto — dá estrutura e ajuda a clarificar.",
+            "Fermente a 22–24 °C: a RC-212 é cepa tinta e trabalha mais quente que o padrão.",
+            "No lugar de P10: envelheça com carvalho francês em cubos, 6 g/L, por 45 dias.",
         ],
         "nota": "Serve como carta de apresentação para sommelier: é o hidromel que fala a língua do vinho.",
     },
@@ -186,12 +263,13 @@ MEDIEVAIS = [
             ("Levedura Safale US-05", "11,5 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Ferva 8 L de água com o extrato de malte por 45 min.",
-            "Adicione o lúpulo nos últimos 15 min. Lúpulo cedo demais amarga e cobre o mel.",
+            "ETAPA NOVA, antes de tudo: ferva 8 L de água com os 2 kg de extrato de malte por 45 min.",
+            "Lúpulo nos últimos 15 min da fervura. Lúpulo cedo demais amarga e cobre o mel.",
             "Resfrie até 25 °C. SÓ ENTÃO dissolva o mel — mel fervido perde tudo que o torna mel.",
-            "Complete até 20 L, inocule e fermente a 18–20 °C.",
-            "Pronto em 30 dias. É a receita mais rápida do grimório.",
+            "Complete até 20 L e siga do P5 em diante.",
+            "Fermente a 18–20 °C. Pronto em 30 dias: é a receita mais rápida do grimório.",
         ],
         "nota": "Braggot é o produto que converte bebedor de cerveja artesanal. Use isso na feira.",
     },
@@ -211,14 +289,15 @@ MEDIEVAIS = [
             ("Levedura Lalvin 71B", "10 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "SEGURANÇA: mel a 130 °C é mais perigoso que óleo quente. Panela alta, fogo médio, luva, mangas longas, sem crianças por perto.",
-            "Cozinhe o mel puro, mexendo sempre. Ele vai espumar e subir — por isso a panela alta.",
-            "Alvo por cor: 40 min = âmbar (toffee) · 60 min = mogno (chocolate) · 75 min = quase preto (amargo, café).",
+            "SEGURANÇA ANTES DE TUDO: mel a 130 °C é mais perigoso que óleo quente. Panela alta, fogo médio, luva, mangas longas, ninguém por perto.",
+            "ETAPA NOVA, no lugar de P2: cozinhe o mel PURO, mexendo sempre. Ele vai espumar e subir — por isso a panela alta.",
+            "Alvo por cor: 40 min = âmbar (toffee) · 60 min = mogno (chocolate) · 75 min = quase preto (café, amargo).",
             "Desligue e espere baixar para 80 °C.",
             "Adicione água quente MUITO devagar. Água fria em mel a 120 °C explode em vapor.",
-            "Complete até 20 L, resfrie até 25 °C e inocule.",
-            "Envelhecimento mínimo de 6 meses. O bochet jovem é agressivo; aos 12 meses fica notável.",
+            "Complete até 20 L, resfrie até 25 °C e siga do P5 em diante.",
+            "Estenda a maturação (P10) para 6 meses no mínimo. Aos 12 fica notável.",
         ],
         "nota": (
             "Perde-se cerca de 15% do volume de mel na caramelização. Já está contabilizado "
@@ -240,13 +319,14 @@ MEDIEVAIS = [
             ("Fermaid-O", "26 g escalonado"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P3", "P4", "P5", "P6", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Não dissolva todo o mel de uma vez. Comece com 6 kg (OG ~1,088).",
-            "Adicione o restante em 3 etapas conforme a densidade cair — é o *step feeding*.",
-            "Alimentar aos poucos evita choque osmótico: mosto muito denso desidrata a levedura e trava a fermentação.",
-            "Nutriente reforçado: 26 g de Fermaid-O em 4 adições.",
-            "Fermente a 18 °C. Vai levar de 45 a 60 dias.",
-            "Maturação mínima de 6 meses; o ideal é 12.",
+            "ETAPA NOVA — step feeding, no lugar de P2: não dissolva todo o mel de uma vez. Comece com 6 kg (OG ~1,088).",
+            "Adicione os 3 kg restantes em 3 etapas, conforme a densidade cair.",
+            "Alimentar aos poucos evita choque osmótico: mosto denso demais desidrata a levedura e trava a fermentação.",
+            "Nutriente reforçado no P7: 26 g de Fermaid-O em vez da dose padrão.",
+            "Fermente a 18 °C. Vai levar de 45 a 60 dias, não os 21 do padrão.",
+            "Maturação mínima de 6 meses.",
         ],
         "nota": "Engarrafe em 375 mL. Ticket alto, volume baixo, presente de fim de ano.",
     },
@@ -266,10 +346,12 @@ MEDIEVAIS = [
             ("Levedura Lalvin D47", "10 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12"],
         "passos": [
-            "Dissolva mel e xarope juntos em água morna.",
+            "No P2, dissolva mel e xarope de bordo juntos na água morna.",
+            "Use xarope escuro (grau A dark). O claro desaparece na fermentação.",
             "Fermente a 16–18 °C: a D47 produz glicerol e dá corpo.",
-            "Guarde 200 g do xarope para adicionar depois da estabilização — devolve o aroma que a fermentação levou.",
+            "Guarde 200 g do xarope para adicionar DEPOIS do P11 — devolve o aroma que a fermentação levou.",
             "Maturação de 90 dias.",
         ],
         "nota": "Use xarope escuro (grau A dark). O claro desaparece na fermentação.",
@@ -290,11 +372,12 @@ MEDIEVAIS = [
             ("Levedura Lalvin 71B", "10 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Confirme a origem das pétalas. Rosa de floricultura tem defensivo e não serve.",
-            "Fermente o hidromel base limpo.",
-            "Na secundária, infusão de 40 g por 5 dias. Prove diariamente.",
-            "Guarde 20 g para um segundo ajuste, se o aroma tiver ficado tímido.",
+            "Confirme a origem das pétalas antes de comprar. Rosa de floricultura tem defensivo e não serve.",
+            "Fermente o hidromel base limpo, sem pétala nenhuma.",
+            "Na secundária: infusão de 40 g por 5 dias. Prove diariamente.",
+            "Guarde 20 g para um segundo ajuste, se o aroma ficar tímido.",
             "Rosa demais vira sabonete. O ponto é o aroma aparecer só na retro-olfação.",
         ],
         "nota": "Garrafa de 375 mL, rótulo de casamento, venda por encomenda. Margem altíssima.",
@@ -315,12 +398,14 @@ MEDIEVAIS = [
             ("Levedura selvagem ou Lalvin EC-1118", "10 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P2", "P3", "P5", "P6", "P9", "P12"],
         "passos": [
-            "Dissolva o mel em água morna.",
-            "Ferva o gesho em 2 L de água por 20 min; coe e junte ao mosto frio.",
+            "ETAPA NOVA: ferva o gesho em 2 L de água por 20 min, coe e junte ao mosto já frio.",
             "Fermente a 22–25 °C — mais quente que o padrão, como manda a tradição.",
-            "O t'ej é bebido jovem: 20 a 30 dias.",
-            "Turbidez é característica do estilo. Não clarifique.",
+            "Sem P7 escalonado: o t'ej tradicional não usa nutriente comercial.",
+            "Bebido jovem: 20 a 30 dias. Não faça o P10.",
+            "NÃO clarifique. Turbidez é característica do estilo.",
+            "Sem gesho? Lúpulo de baixo alfa (Saaz, 15 g) + uma pitada de casca de laranja amarga. O rótulo deve dizer \"inspirado no t'ej\", não \"t'ej\".",
         ],
         "nota": (
             "Sem gesho no Brasil? A substituição mais próxima é lúpulo de baixo alfa "
@@ -344,11 +429,12 @@ MEDIEVAIS = [
             ("Lúpulo Lublin", "10 g"),
             ("Levedura Lalvin K1-V1116", "12 g"),
         ],
+        "base": ["P1", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Tradicionalmente o mosto é fervido — o que clarifica e esteriliza, ao custo de aroma.",
-            "Versão moderna: aqueça a 70 °C por 15 min em vez de ferver. Fica no meio-termo.",
-            "Adicione o lúpulo nos últimos 10 min do aquecimento.",
-            "Resfrie, inocule, fermente a 18 °C.",
+            "A proporção é em VOLUME: 1 parte de mel para 2 de água (7 kg para 14 L).",
+            "ETAPA NOVA, no lugar de P2: aqueça o mosto a 70 °C por 15 min. A tradição manda ferver; 70 °C é o meio-termo que clarifica sem matar o aroma.",
+            "Lúpulo nos últimos 10 min do aquecimento.",
+            "Resfrie e siga do P5 em diante. Fermente a 18 °C.",
             "Maturação mínima de 6 meses. A tradição pede 2 anos.",
         ],
         "nota": "Se for exportar ou vender para público polonês, respeite a proporção. Eles conferem.",
@@ -379,14 +465,14 @@ PREMIUM = [
             ("Levedura Lalvin 71B", "10 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P5", "P6", "P7", "P8", "P9", "P11", "P12"],
         "passos": [
-            "Caramelize o mel por 55 min, até o tom mogno (ver Bochet, com as mesmas precauções de segurança).",
-            "Faça cold brew: 180 g de café moído grosso em 1,5 L de água fria por 16 h na geladeira.",
-            "Coe o café em pano fino. Nunca use café quente — extrai amargor áspero.",
-            "Fermente o bochet base sozinho, até o fim.",
-            "Estabilize (sorbato + metabissulfito) e espere 24 h.",
-            "Adicione o cold brew aos poucos, provando. Comece com metade.",
-            "Cardamomo: 12 vagens levemente amassadas, em infusão de 72 h. Prove a cada 24 h.",
+            "Caramelize o mel por 55 min até o tom mogno — técnica e segurança idênticas às do Bochet (Receita 07).",
+            "Cold brew: 180 g de café moído grosso em 1,5 L de água fria, 16 h na geladeira. Coe em pano fino.",
+            "Nunca use café quente: extrai um amargor áspero que não sai mais.",
+            "Depois do P11, espere 24 h e adicione o cold brew aos poucos. Comece com metade.",
+            "Cardamomo: 12 vagens levemente amassadas, infusão de 72 h, provando a cada 24 h.",
+            "Cardamomo tem janela estreitíssima: no ponto é perfume, um dia depois é sabão.",
             "Maturação de 90 dias após as adições.",
         ],
         "nota": (
@@ -414,14 +500,14 @@ PREMIUM = [
             ("Pectinase", "2 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Congele a jabuticaba por 48 h e descongele. A casca é onde está a cor e o tanino.",
-            "Fermente o hidromel base até metade da queda de densidade.",
-            "Adicione a fruta inteira em saco de malha, na secundária, com a pectinase.",
-            "10 dias de contato. NÃO esprema o saco: a semente da jabuticaba é muito amarga.",
-            "Trasfegue e adicione a amburana. Comece com 20 g.",
-            "Prove a cada 3 dias. Amburana é potente — 20 g podem bastar em 20 L.",
-            "Retire a madeira quando a baunilha aparecer no fim do gole, não no meio.",
+            "Técnica de fruta idêntica à do Melomel (Receita 03): congelar 48 h, saco de malha na secundária, pectinase, não espremer.",
+            "4,0 kg de jabuticaba, 10 dias de contato. A casca é onde estão a cor e o tanino.",
+            "A semente da jabuticaba é muito amarga — espremer o saco arruína o lote.",
+            "Depois de trasfegar, adicione a amburana. Comece com 20 g, não com os 40 g.",
+            "Prove a cada 3 dias. Retire a madeira quando a baunilha aparecer no fim do gole.",
+            "Amburana em excesso deixa gosto medicinal que não sai. Melhor adicionar de novo do que tentar tirar.",
             "Maturação de 120 dias.",
         ],
         "nota": (
@@ -447,14 +533,16 @@ PREMIUM = [
             ("Levedura Lalvin D47", "10 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P11", "P12"],
         "passos": [
-            "Fermente o hidromel base de aroeira até o fim, limpo.",
-            "Estabilize.",
-            "Extrato: 25 g de pimenta rosa levemente amassada em 500 mL do próprio hidromel, 48 h.",
-            "Extrato de picância, separado: 2 dedos-de-moça SEM SEMENTE em 250 mL, por 12 h apenas.",
+            "Fermente o hidromel base de aroeira até o fim, limpo, e estabilize (P11).",
+            "ETAPA NOVA — dois extratos SEPARADOS, um de aroma e um de picância:",
+            "Aroma: 25 g de pimenta rosa levemente amassada em 500 mL do próprio hidromel, 48 h.",
+            "Picância: 2 dedos-de-moça SEM SEMENTE em 250 mL, por 12 h apenas.",
+            "Semente e placenta concentram quase toda a capsaicina. Deixá-las produz um lote impossível de beber e sem conserto.",
             "Junte os extratos ao lote em pequenas doses, provando sempre.",
-            "Alvo: a picância aparece 3 a 4 segundos depois do gole e desaparece rápido.",
-            "Maturação de 60 dias. A picância diminui um pouco com o tempo — calibre um ponto acima.",
+            "Alvo: a picância aparece 3 a 4 s depois do gole e desaparece rápido.",
+            "Maturação de 60 dias. A picância cai um pouco com o tempo — calibre um ponto acima.",
         ],
         "nota": (
             "Semente e placenta concentram quase toda a capsaicina. Deixar as sementes "
@@ -479,13 +567,14 @@ PREMIUM = [
             ("Levedura Lalvin 71B", "10 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
             "Fermente o hidromel base limpo.",
-            "Infusão a frio de hibisco: 120 g por 72 h na secundária. A cor sai rápido, o tanino também.",
-            "Não passe de 96 h — depois disso vem uma adstringência que não sai.",
+            "Infusão a frio de hibisco na secundária: 120 g por 72 h. A cor sai rápido, o tanino também.",
+            "NÃO passe de 96 h — depois disso vem uma adstringência que não sai.",
             "Gengibre: 80 g em lâminas, 48 h, em paralelo.",
-            "Trasfegue com cuidado: a cor é o produto.",
-            "Clarifique com quitosana, que preserva a cor melhor que a bentonita.",
+            "Trasfegue com cuidado redobrado: a cor é o produto.",
+            "Clarifique com quitosana, não bentonita — preserva melhor a cor.",
         ],
         "nota": "Garrafa de vidro claro, obrigatoriamente. A cor é metade do que o cliente compra.",
     },
@@ -507,12 +596,13 @@ PREMIUM = [
             ("Fermaid-O", "26 g escalonado"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P3", "P4", "P5", "P6", "P8", "P9", "P10", "P11", "P12"],
         "passos": [
-            "Step feeding, como no Sack Mead: 6 kg no início, o resto em 3 etapas.",
+            "Step feeding idêntico ao do Sack Mead (Receita 08): 6 kg no início, os 3 kg restantes em 3 etapas.",
             "Fermente a 18 °C por 45 a 60 dias.",
-            "Estabilize.",
-            "Abra as favas ao meio, raspe as sementes e deixe tudo em infusão por 14 dias.",
+            "Depois do P11: abra as 3 favas de baunilha ao meio, raspe as sementes e deixe tudo em infusão por 14 dias.",
             "Maturação mínima de 6 meses.",
+            "Engarrafe em 375 mL com rolha de cortiça — formato de sobremesa vende melhor que 750 mL.",
         ],
         "nota": "Engarrafe em 375 mL com rolha de cortiça. Formato de sobremesa vende melhor que 750 mL.",
     },
@@ -536,12 +626,13 @@ PREMIUM = [
             ("Levedura Safale US-05", "11,5 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P5", "P6", "P7", "P8", "P9", "P12"],
         "passos": [
-            "Faça a mostura do malte chocolate em 4 L a 68 °C por 30 min; coe.",
-            "Ferva com o extrato de malte por 45 min.",
-            "Resfrie até 25 °C e só então adicione o mel.",
-            "Fermente a 19 °C.",
-            "Na secundária: cacau nibs (200 g) por 10 dias, e cold brew do café nos últimos 3.",
+            "Mostura e fervura idênticas às do Braggot (Receita 06), com uma etapa a mais antes:",
+            "Mostura do malte chocolate: 300 g em 4 L a 68 °C por 30 min; coe.",
+            "Ferva com o extrato de malte por 45 min. Resfrie a 25 °C e só então dissolva o mel.",
+            "Na secundária: cacau nibs (200 g) por 10 dias, e o cold brew do café nos últimos 3.",
+            "Toste os nibs a 150 °C por 10 min antes de usar — muda completamente o aroma.",
             "Pronto em 45 dias.",
         ],
         "nota": "Tosta os nibs a 150 °C por 10 min antes de usar. Muda completamente o aroma.",
@@ -563,13 +654,14 @@ PREMIUM = [
             ("Bentonita", "10 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Fermente a 14–16 °C. Frio e devagar — é o que preserva a mineralidade.",
-            "Nutriente completo: seco extremo exige levedura sem nenhum estresse.",
-            "Fermente até parar sozinho, sem interferir.",
+            "Fermente a 14–16 °C. Frio e devagar é o que preserva a mineralidade do eucalipto.",
+            "Nutriente completo no P7: seco extremo exige levedura sem nenhum estresse.",
+            "Deixe fermentar até parar sozinho, sem interferir. Alvo de FG: 0,996.",
             "Clarifique com bentonita até ficar brilhante.",
-            "Maturação de 120 dias.",
-            "Considere carbonatação leve (2,0 volumes) para servir como aperitivo.",
+            "Estenda a maturação para 120 dias.",
+            "Opcional: carbonatação leve (2,0 volumes) para servir como aperitivo.",
         ],
         "nota": "Leve duas garrafas e uma ficha de harmonização quando for falar com o sommelier. Ele decide na hora.",
     },
@@ -592,11 +684,11 @@ PREMIUM = [
             ("Pectinase", "2 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
             "Confira a polpa: sorbato ou benzoato impedem a fermentação.",
-            "Fermente o base até metade da densidade e adicione a polpa na secundária.",
-            "8 dias de contato com a fruta.",
-            "Pimenta: 8 g moídas na hora, em infusão de 24 h. Só 24 h.",
+            "Técnica de fruta idêntica à do Melomel (Receita 03). 3,0 kg de polpa na secundária, 8 dias de contato.",
+            "Pimenta: 8 g moídas na hora, infusão de 24 h. SÓ 24 h — passa de sutil a dominante em poucas horas.",
             "Maturação de 60 dias.",
         ],
         "nota": "Pimenta do reino passa de sutil a dominante em poucas horas. Cronometre.",
@@ -618,12 +710,13 @@ PREMIUM = [
             ("Alecrim fresco", "20 g"),
             ("Levedura Lalvin DV10", "10 g"),
         ],
+        "base": ["P1", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Misture mel e suco; complete até 20 L.",
+            "No lugar de P2 e P3: mel dissolvido nos 12 L de suco de maçã verde, completar até 20 L.",
             "Fermente a 15 °C até secar completamente.",
-            "Alecrim: 20 g em infusão a frio por 36 h, na secundária.",
+            "Alecrim: 20 g em infusão a frio por 36 h na secundária.",
             "Prove a cada 12 h — alecrim vira pinho muito rápido.",
-            "Clarifique e maturação de 90 dias.",
+            "Maturação de 90 dias. Sirva a 8 °C: quente, o alecrim domina tudo.",
         ],
         "nota": "Sirva a 8 °C. Quente, o alecrim domina tudo.",
     },
@@ -645,11 +738,13 @@ PREMIUM = [
             ("Levedura Lalvin 71B", "10 g"),
             ("Água até completar", "20 L"),
         ],
+        "base": ["P1", "P5", "P6", "P7", "P8", "P9", "P10", "P12"],
         "passos": [
-            "Caramelize o mel por 50 min (precauções do Bochet).",
-            "Dissolva a rapadura ralada na água quente, separadamente.",
-            "Junte tudo, complete até 20 L, resfrie e inocule.",
+            "Caramelize o mel por 50 min, com as mesmas precauções do Bochet (Receita 07).",
+            "Dissolva a rapadura ralada separadamente, na água quente.",
+            "Junte tudo, complete até 20 L, resfrie a 25 °C e siga do P5.",
             "Cravo: apenas 4 unidades, na secundária, por 48 h. Cravo é implacável.",
+            "Quatro cravos em 20 litros parece pouco. Não é — oito arruínam o lote.",
             "Maturação mínima de 6 meses.",
         ],
         "nota": "Quatro cravos em 20 litros parece pouco. Não é. Oito arruínam o lote.",

@@ -86,9 +86,14 @@ hidromel/
 │   ├── analisar-producao.mjs    custo de produção dos vídeos
 │   ├── gerar-briefing-ia.mjs    prompts de IA + roteiros de narração
 │   ├── auditar.mjs              varredura de defeitos (falha em ALTA)
+│   ├── gerar-previa.mjs         empacota a página de vendas num arquivo só
+│   ├── servir-como-vercel.mjs   serve com os headers do vercel.json
 │   ├── testar-calculadoras.mjs  22 testes
 │   └── testar-worker.mjs        83 testes
+├── previa/                 prévia em arquivo único (gerada)
+├── vercel.json             headers de segurança, cache e noindex
 ├── docs/
+│   ├── DEPLOY.md           publicar na Vercel — e o passo que quebra
 │   ├── LANCAMENTO.md       estratégia de 30 dias + copy de anúncios
 │   ├── PAGAMENTOS.md       comparativo de taxas e configuração
 │   ├── JURIDICO.md         MAPA, MEI, rótulo, LGPD, o que não pode
@@ -122,7 +127,8 @@ node scripts/auditar.mjs             # auditoria de defeitos
 2. **Preencha `assets/js/config.js`** — a `API_URL` tira o site do modo demonstração.
 3. **Preencha os dados da empresa** — rodapé de `index.html` e campos `[ ]` em `docs/legal/`.
 4. **Depoimentos** — coloque reais ou remova a seção (ver `docs/JURIDICO.md` §5).
-5. **Publique a pasta** em GitHub Pages, Netlify, Vercel ou qualquer hospedagem.
+5. **Publique a pasta** — `docs/DEPLOY.md` traz o passo a passo da Vercel
+   (atenção ao Root Directory: sem ele, publica o app de açaí).
 6. **Grave os vídeos** — `docs/VIDEOS-ROTEIROS.md` traz a ordem e os roteiros.
 7. **Lance** — `docs/LANCAMENTO.md` traz o plano de 30 dias.
 

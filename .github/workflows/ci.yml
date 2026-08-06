@@ -37,6 +37,15 @@ jobs:
         working-directory: hidromel
         run: node scripts/auditar.mjs
 
+      # A prévia é um único .html com tudo embutido. Empacotar quebra em
+      # silêncio: substituição que come o $$, imagem montada em runtime que
+      # vira 404, recorte que corta no lugar errado. Este teste é o guarda.
+      - name: Prévia em arquivo único
+        working-directory: hidromel
+        run: |
+          node scripts/gerar-previa.mjs
+          node scripts/testar-previa.mjs
+
   # ---------------------------------------------------------------------------
   # Os artefatos de assets/img e docs/legal são GERADOS por script e commitados.
   # Sem esta checagem, alguém edita o gerador, esquece de rodar, e o site passa a

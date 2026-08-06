@@ -647,10 +647,11 @@ function posterVideo() {
 <!-- Só marca decorativa. O texto ("Aula em produção") é sobreposto em HTML pelo
      player — se estivesse aqui também, apareceria duplicado, e o corte do
      background-size:cover ainda o partiria ao meio em telas largas. -->
-<path d="${hexPath(640, 360, 100, 13)}" fill="${C.carvao}" fill-opacity="0.75"
+<!-- Emblema acima do centro: a caixa de aviso do player ocupa a faixa de baixo. -->
+<path d="${hexPath(640, 288, 100, 13)}" fill="${C.carvao}" fill-opacity="0.75"
       stroke="url(#${g})" stroke-width="3"/>
-<path d="${hexPath(640, 360, 84, 11)}" fill="none" stroke="${C.ouro}" stroke-width="1" stroke-opacity="0.45"/>
-<path d="M610 314 L712 360 L610 406 Z" fill="url(#${g})"/>
+<path d="${hexPath(640, 288, 84, 11)}" fill="none" stroke="${C.ouro}" stroke-width="1" stroke-opacity="0.45"/>
+<path d="M610 242 L712 288 L610 334 Z" fill="url(#${g})"/>
 <rect width="${W}" height="${H}" filter="url(#${gr})" fill="transparent" opacity="0.5"/>
 `);
 }

@@ -27,14 +27,14 @@
 <rect width="1280" height="720" fill="#0E0B08"/>
 <rect width="1280" height="720" fill="url(#fvo)"/>
 <ellipse cx="640" cy="360" rx="520" ry="380" fill="url(#brq)"/>
-<path d="M629.61,234.00 Q640.00,228.00 650.39,234.00 L709.28,268.00 Q719.67,274.00 719.67,286.00 L719.67,354.00 Q719.67,366.00 709.28,372.00 L650.39,406.00 Q640.00,412.00 629.61,406.00 L570.72,372.00 Q560.33,366.00 560.33,354.00 L560.33,286.00 Q560.33,274.00 570.72,268.00 Z" fill="#1F160D" fill-opacity="0.8"
+<!-- Só marca decorativa. O texto ("Aula em produção") é sobreposto em HTML pelo
+     player — se estivesse aqui também, apareceria duplicado, e o corte do
+     background-size:cover ainda o partiria ao meio em telas largas. -->
+<!-- Emblema acima do centro: a caixa de aviso do player ocupa a faixa de baixo. -->
+<path d="M628.74,194.50 Q640.00,188.00 651.26,194.50 L715.34,231.50 Q726.60,238.00 726.60,251.00 L726.60,325.00 Q726.60,338.00 715.34,344.50 L651.26,381.50 Q640.00,388.00 628.74,381.50 L564.66,344.50 Q553.40,338.00 553.40,325.00 L553.40,251.00 Q553.40,238.00 564.66,231.50 Z" fill="#1F160D" fill-opacity="0.75"
       stroke="url(#gp)" stroke-width="3"/>
-<path d="M612 278 L706 320 L612 362 Z" fill="url(#gp)"/>
-<text x="640" y="470" text-anchor="middle" font-family="Georgia,serif" font-size="15"
-      letter-spacing="8" fill="#D4A017">HIDROMEL DE REIS</text>
-<path d="M480 496 h320" stroke="url(#gp)" stroke-width="1.5" opacity="0.6"/>
-<text x="640" y="532" text-anchor="middle" font-family="Georgia,serif" font-size="20"
-      fill="#D9C9A3">Aula em produção</text>
+<path d="M630.47,209.50 Q640.00,204.00 649.53,209.50 L703.22,240.50 Q712.75,246.00 712.75,257.00 L712.75,319.00 Q712.75,330.00 703.22,335.50 L649.53,366.50 Q640.00,372.00 630.47,366.50 L576.78,335.50 Q567.25,330.00 567.25,319.00 L567.25,257.00 Q567.25,246.00 576.78,240.50 Z" fill="none" stroke="#D4A017" stroke-width="1" stroke-opacity="0.45"/>
+<path d="M610 242 L712 288 L610 334 Z" fill="url(#gp)"/>
 <rect width="1280" height="720" filter="url(#grr)" fill="transparent" opacity="0.5"/>
 
 </svg>

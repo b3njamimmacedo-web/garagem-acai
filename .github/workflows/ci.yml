@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancela execuções antigas do mesmo branch quando chega um push novo.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  testes-hidromel:
+    name: Testes da plataforma Hidromel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Calculadoras (22 verificações)
+        working-directory: hidromel
+        run: node scripts/testar-calculadoras.mjs
+
+      - name: Backend — segurança e entrega (62 verificações)
+        working-directory: hidromel
+        run: node scripts/testar-worker.mjs
+
+  # ---------------------------------------------------------------------------
+  # Os artefatos de assets/img e docs/legal são GERADOS por script e commitados.
+  # Sem esta checagem, alguém edita o gerador, esquece de rodar, e o site passa a
+  # servir um asset que não corresponde mais ao código — foi exatamente o que
+  # aconteceu com poster-video.svg antes deste workflow existir.
+  #
+  # Os PDFs ficam de fora de propósito: o reportlab grava a data de criação
+  # dentro do arquivo, então dois builds do mesmo conteúdo nunca são idênticos.
+  artefatos-em-dia:
+    name: Artefatos gerados estão sincronizados
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Regerar SVGs
+        working-directory: hidromel
+        run: node scripts/gerar-arte.mjs
+
+      - name: Regerar páginas legais
+        working-directory: hidromel
+        run: python3 scripts/gerar_legal.py
+
+      - name: Conferir se algo mudou
+        run: |
+          if ! git diff --quiet -- hidromel/assets/img hidromel/docs/legal; then
+            echo "::error::Artefato gerado está desatualizado em relação ao script."
+            echo ""
+            echo "Rode e faça commit do resultado:"
+            echo "  cd hidromel"
+            echo "  node scripts/gerar-arte.mjs"
+            echo "  python3 scripts/gerar_legal.py"
+            echo ""
+            git diff --stat -- hidromel/assets/img hidromel/docs/legal
+            exit 1
+          fi
+          echo "Tudo sincronizado."
+
+  # ---------------------------------------------------------------------------
+  # O PDF não dá para diffar, mas dá para garantir que o gerador ainda roda e
+  # produz a quantidade certa de arquivos com conteúdo.
+  pdfs-geram:
+    name: PDFs são geráveis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install --quiet reportlab pypdf
+
+      - name: Gerar os PDFs
+        working-directory: hidromel
+        run: python3 scripts/gerar_pdfs.py
+
+      - name: Conferir que abrem e não estão vazios
+        working-directory: hidromel
+        run: |
+          python3 - <<'PY'
+          import glob, sys
+          from pypdf import PdfReader
+
+          arquivos = sorted(glob.glob("material/*.pdf"))
+          assert len(arquivos) == 11, f"esperava 11 PDFs, encontrei {len(arquivos)}"
+
+          falhas = []
+          for f in arquivos:
+              paginas = len(PdfReader(f).pages)
+              texto = (PdfReader(f).pages[1].extract_text() or "").strip()
+              print(f"  {f:<48} {paginas:3d} páginas")
+              if paginas < 2:
+                  falhas.append(f"{f}: só {paginas} página(s)")
+              if not texto:
+                  falhas.append(f"{f}: primeira página de miolo sem texto")
+
+          if falhas:
+              print("\n".join(falhas), file=sys.stderr)
+              sys.exit(1)
+          print("\nTodos os 11 PDFs abrem, têm miolo e contêm texto.")
+          PY
+
+  # ---------------------------------------------------------------------------
+  # O app de açaí na raiz não tinha CI nenhum. Como este repositório passa a ter
+  # workflow, vale garantir que ele continua compilando.
+  build-acai:
+    name: Build do app Garagem do Açaí
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build

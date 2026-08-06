@@ -402,5 +402,164 @@ console.log('\n— limite de requisições —');
 }
 
 /* ------------------------------------------------------------------------ */
+
+/* ============================================================================
+   SEGURANÇA — casos encontrados na auditoria. Cada um falhou antes da correção.
+============================================================================ */
+
+console.log('\n— auditoria: escaping —');
+{
+  const env = ambiente();
+  env.RESEND_API_KEY = 'chave-de-teste';
+
+  // captura o corpo do e-mail realmente enviado
+  let emailEnviado = null;
+  const fetchOriginal = globalThis.fetch;
+  globalThis.fetch = async (u, o = {}) => {
+    if (String(u).includes('resend.com')) {
+      emailEnviado = JSON.parse(o.body);
+      return new Response('{}', { status: 200 });
+    }
+    return fetchOriginal(u, o);
+  };
+
+  const pedido = 'HDR-xss';
+  await env.ALUNOS.put('pedido:' + pedido, JSON.stringify({
+    status: 'pendente', email: 'vitima@teste.com',
+    nome: '<img src=x onerror="alert(1)"> Silva', plano: 'mestre', bump: false,
+  }));
+  pagamentoFalso = { id: 700, status: 'approved', external_reference: pedido,
+    payer: { email: 'vitima@teste.com' }, metadata: { plano: 'mestre' } };
+  await webhookAssinado(env, 700);
+  globalThis.fetch = fetchOriginal;
+
+  t('e-mail foi montado', !!emailEnviado);
+  t('nome com HTML sai ESCAPADO no corpo do e-mail',
+    !emailEnviado.html.includes('<img src=x'), 'payload passou cru');
+  t('escape usa entidade e não remove o texto',
+    emailEnviado.html.includes('&lt;img src=x'), 'nome sumiu em vez de ser escapado');
+
+  const aluno = await env.ALUNOS.get('aluno:vitima@teste.com', 'json');
+  t('o nome fica gravado como TEXTO (escapar é na renderização, não no armazenamento)',
+    aluno.nome.includes('<img'), 'nome foi mutilado no armazenamento');
+}
+
+console.log('\n— auditoria: limites de entrada —');
+{
+  const env = ambiente();
+  const r = await post(env, '/api/pedido', { ...CLIENTE, nome: 'A'.repeat(50000) + ' Silva' });
+  t('aceita o pedido com nome gigante', r.status === 200);
+  const d = await r.json();
+  const pend = await env.ALUNOS.get('pedido:' + d.pedidoId, 'json');
+  t('nome é CORTADO em 120 caracteres antes de gravar', pend.nome.length <= 120,
+    pend.nome.length + ' caracteres');
+
+  const r2 = await post(env, '/api/pedido', { ...CLIENTE, nome: 'Ana\nBcc: outro@x.com Silva' });
+  const d2 = await r2.json();
+  const p2 = await env.ALUNOS.get('pedido:' + d2.pedidoId, 'json');
+  t('quebra de linha no nome é removida (injeção de cabeçalho de e-mail)',
+    !/[\r\n]/.test(p2.nome), JSON.stringify(p2.nome));
+}
+
+console.log('\n— auditoria: revogação de credencial —');
+{
+  const env = ambiente();
+  const a = await (async () => {
+    await env.ALUNOS.put('pedido:HDR-rv', JSON.stringify({
+      status: 'pendente', email: 'rv@teste.com', nome: 'R V', plano: 'mestre', bump: false }));
+    pagamentoFalso = { id: 701, status: 'approved', external_reference: 'HDR-rv',
+      payer: { email: 'rv@teste.com' }, metadata: { plano: 'mestre' } };
+    await webhookAssinado(env, 701);
+    return env.ALUNOS.get('aluno:rv@teste.com', 'json');
+  })();
+
+  const login = await (await post(env, '/api/entrar',
+    { email: 'rv@teste.com', codigo: a.codigo, dispositivo: 'd1' })).json();
+  t('sessão vale antes da revogação',
+    (await post(env, '/api/eu', { token: login.token })).status === 200);
+
+  await env.ALUNOS.put('aluno:rv@teste.com', JSON.stringify({ ...a, codigo: 'MEAD-XXXX-YYYY-ZZZZ' }));
+  const depois = await post(env, '/api/eu', { token: login.token });
+  t('trocar o código DERRUBA a sessão aberta', depois.status === 401);
+  t('erro identifica a revogação', (await depois.json()).codigo === 'revogado');
+}
+
+console.log('\n— auditoria: tipo de token —');
+{
+  const env = ambiente();
+  await env.ALUNOS.put('pedido:HDR-tt', JSON.stringify({
+    status: 'pendente', email: 'tt@teste.com', nome: 'T T', plano: 'mestre', bump: false }));
+  pagamentoFalso = { id: 702, status: 'approved', external_reference: 'HDR-tt',
+    payer: { email: 'tt@teste.com' }, metadata: { plano: 'mestre' } };
+  await webhookAssinado(env, 702);
+
+  const reg = await env.ALUNOS.get('pedido:HDR-tt', 'json');
+  const tokenEmail = reg.link.split('t=')[1];
+  t('token do link de e-mail NÃO serve como sessão',
+    (await post(env, '/api/eu', { token: tokenEmail })).status === 401);
+  t('mas ele ENTRA normalmente pelo endpoint certo',
+    (await post(env, '/api/entrar/token', { token: tokenEmail, dispositivo: 'd1' })).status === 200);
+}
+
+console.log('\n— auditoria: credencial na consulta de pedido —');
+{
+  const env = ambiente();
+  await env.ALUNOS.put('pedido:HDR-jan', JSON.stringify({
+    status: 'pendente', email: 'j@teste.com', nome: 'J S', plano: 'mestre', bump: false }));
+  pagamentoFalso = { id: 703, status: 'approved', external_reference: 'HDR-jan',
+    payer: { email: 'j@teste.com' }, metadata: { plano: 'mestre' } };
+  await webhookAssinado(env, 703);
+
+  const agora = await (await chamar(env, '/api/pedido/HDR-jan')).json();
+  t('logo após aprovar, a página de obrigado recebe a credencial', !!agora.codigo);
+
+  // envelhece o registro em 2 horas
+  const reg = await env.ALUNOS.get('pedido:HDR-jan', 'json');
+  await env.ALUNOS.put('pedido:HDR-jan', JSON.stringify({ ...reg, aprovadoEm: Date.now() - 2 * 3600 * 1000 }));
+  const velho = await (await chamar(env, '/api/pedido/HDR-jan')).json();
+  t('passada 1 hora, a rota pública NÃO devolve mais o código', !velho.codigo, JSON.stringify(velho));
+  t('mas ainda confirma que o pedido foi aprovado', velho.status === 'aprovado');
+}
+
+console.log('\n— auditoria: plano inválido não derruba a entrega —');
+{
+  const env = ambiente();
+  env.WEBHOOK_TOKEN_PLATAFORMA = 'tk';
+  env.PLANOS_EXTERNOS = '{"oferta-x":"plano_que_nao_existe"}';
+  const r = await post(env, '/api/webhook/kirvano', {
+    event: 'SALE_APPROVED', customer: { email: 'pi@teste.com', name: 'P I' },
+    sale_id: 'S9', products: [{ offer_id: 'oferta-x' }],
+  }, { 'x-webhook-token': 'tk' });
+
+  t('webhook com plano desconhecido NÃO retorna 500', r.status === 200, 'status ' + r.status);
+  const a = await env.ALUNOS.get('aluno:pi@teste.com', 'json');
+  t('o cliente que pagou recebe acesso mesmo assim', !!a?.codigo);
+  t('cai no plano de entrada em vez de gravar plano inválido', a?.plano === 'iniciado', a?.plano);
+}
+
+console.log('\n— auditoria: webhooks simultâneos —');
+{
+  const env = ambiente();
+  await env.ALUNOS.put('pedido:HDR-cc', JSON.stringify({
+    status: 'pendente', email: 'cc@teste.com', nome: 'C C', plano: 'mestre', bump: false }));
+  pagamentoFalso = { id: 704, status: 'approved', external_reference: 'HDR-cc',
+    payer: { email: 'cc@teste.com' }, metadata: { plano: 'mestre' } };
+  await Promise.all([webhookAssinado(env, 704), webhookAssinado(env, 704), webhookAssinado(env, 704)]);
+  const a = await env.ALUNOS.get('aluno:cc@teste.com', 'json');
+  t('três webhooks simultâneos geram UM registro de pedido', a.pedidos.length === 1,
+    a.pedidos.length + ' registros');
+}
+
+console.log('\n— auditoria: diagnóstico de configuração —');
+{
+  const env = ambiente();
+  env.ORIGEM_PERMITIDA = '*';
+  const aberto = await (await chamar(env, '/api/saude')).json();
+  t('/api/saude avisa que o CORS está aberto', aberto.origemTravada === false);
+  env.ORIGEM_PERMITIDA = 'https://site.real';
+  const travado = await (await chamar(env, '/api/saude')).json();
+  t('/api/saude confirma quando o CORS está travado', travado.origemTravada === true);
+}
+
 console.log(`\n${ok} passaram, ${falhou} falharam\n`);
 process.exit(falhou ? 1 : 0);

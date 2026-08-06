@@ -25,9 +25,17 @@ jobs:
         working-directory: hidromel
         run: node scripts/testar-calculadoras.mjs
 
-      - name: Backend — segurança e entrega (62 verificações)
+      - name: Backend — segurança e entrega
         working-directory: hidromel
         run: node scripts/testar-worker.mjs
+
+      # Varredura de defeitos que teste de unidade não pega: referência
+      # quebrada entre aulas, PDF citado que sumiu, número da página de vendas
+      # divergindo do currículo, dado de aluno interpolado sem escapar,
+      # segredo commitado por engano. Falha só em achado de gravidade ALTA.
+      - name: Auditoria
+        working-directory: hidromel
+        run: node scripts/auditar.mjs
 
   # ---------------------------------------------------------------------------
   # Os artefatos de assets/img e docs/legal são GERADOS por script e commitados.

@@ -94,6 +94,13 @@ export function backsweetening(litros, fgAtual, fgAlvo, pH = 3.5) {
   const pontos = Math.max(0, (fgAlvo - fgAtual) * 1000);
   const melKg = (pontos * litros) / PONTOS_POR_KG_POR_LITRO;
 
+  // FG alvo menor que a atual não é adoçar — é erro de digitação. Devolver
+  // "0 kg de mel + 4 g de sorbato" faria o aluno estabilizar sem motivo.
+  if (pontos <= 0) {
+    return { melKg: 0, sorbatoG: 0, metaG: 0, so2Livre: 0,
+      aviso: 'A densidade desejada precisa ser MAIOR que a atual para adoçar.' };
+  }
+
   // Sorbato de potássio: 200 ppm é a dose de trabalho usual.
   const sorbatoG = (litros * 200) / 1000;
 
@@ -137,6 +144,14 @@ export function escalonar(itens, volumeOriginal, volumeNovo) {
  * o preço final, e a margem real acaba metade da esperada.
  */
 export function precificar({ custoUnitario, impostoPct = 0, comissaoPct = 0, margemPct = 30, perdaPct = 8 }) {
+  // Perda de 100% divide por zero e devolve Infinity, que vira "null" no JSON
+  // e "R$ NaN" na tela.
+  if (perdaPct >= 100) {
+    return { erro: 'A perda precisa ser menor que 100%.' };
+  }
+  if (!(custoUnitario > 0)) {
+    return { erro: 'Informe um custo unitário maior que zero.' };
+  }
   const custoComPerda = custoUnitario / (1 - perdaPct / 100);
   const soma = impostoPct + comissaoPct + margemPct;
   if (soma >= 100) {
@@ -170,6 +185,10 @@ export function pontoEquilibrio(custoFixoMensal, lucroPorGarrafa) {
 export function fichaTecnica({ litros, melKg, precoMelKg, levedura = 0, nutriente = 0,
                                garrafaUn = 0, rolhaUn = 0, rotuloUn = 0, capsulaUn = 0,
                                outros = 0, volumeGarrafaMl = 750, perdaPct = 8 }) {
+  if (!(volumeGarrafaMl > 0) || perdaPct >= 100) {
+    return { garrafas: 0, custoLote: 0, custoEmbalagemUn: 0, custoUnitario: 0, custoTotal: 0,
+      erro: 'A perda precisa ser menor que 100% e a garrafa ter volume maior que zero.' };
+  }
   const garrafasBrutas = (litros * 1000) / volumeGarrafaMl;
   const garrafas = Math.floor(garrafasBrutas * (1 - perdaPct / 100));
   const custoLote = melKg * precoMelKg + levedura + nutriente + outros;

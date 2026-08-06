@@ -51,7 +51,7 @@ Na área de membros, use qualquer e-mail e o código `MEAD-DEMO-2026-REIS`.
 | **36 SVGs** | arte autoral, gerada por código — nenhuma imagem licenciada |
 | **5 calculadoras** | mosto, ABV, nutriente TOSNA, backsweetening, precificação |
 | **Backend completo** | Pix e cartão, webhook assinado, credencial única, e-mail |
-| **84 testes** | 22 das calculadoras + 62 do backend |
+| **105 testes** | 22 das calculadoras + 83 do backend, mais a auditoria |
 
 ---
 
@@ -85,8 +85,9 @@ hidromel/
 │   ├── receitas.py              conteúdo das 30 receitas
 │   ├── analisar-producao.mjs    custo de produção dos vídeos
 │   ├── gerar-briefing-ia.mjs    prompts de IA + roteiros de narração
+│   ├── auditar.mjs              varredura de defeitos (falha em ALTA)
 │   ├── testar-calculadoras.mjs  22 testes
-│   └── testar-worker.mjs        62 testes
+│   └── testar-worker.mjs        83 testes
 ├── docs/
 │   ├── LANCAMENTO.md       estratégia de 30 dias + copy de anúncios
 │   ├── PAGAMENTOS.md       comparativo de taxas e configuração
@@ -109,7 +110,8 @@ node scripts/gerar-briefing-ia.mjs   # prompts de IA e roteiros
 node scripts/analisar-producao.mjs   # custo de produção de vídeo
 
 node scripts/testar-calculadoras.mjs # 22 testes
-node scripts/testar-worker.mjs       # 62 testes
+node scripts/testar-worker.mjs       # 83 testes
+node scripts/auditar.mjs             # auditoria de defeitos
 ```
 
 ---

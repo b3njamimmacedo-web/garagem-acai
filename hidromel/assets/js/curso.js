@@ -10,6 +10,25 @@ import * as CALC from './calculadoras.js';
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
+/**
+ * Escapa texto para interpolação em HTML.
+ *
+ * OBRIGATÓRIO em qualquer dado que venha do aluno ou do servidor: nome, e-mail,
+ * código, mensagens de erro. O nome é digitado no checkout pelo próprio
+ * comprador, então `<img src=x onerror=...>` no campo nome executa script na
+ * área de membros — testado e confirmado no navegador.
+ *
+ * Texto do currículo (títulos, descrições) NÃO passa por aqui de propósito:
+ * é conteúdo nosso, versionado no repositório, e usa <b>/<em> na descrição.
+ */
+export const esc = (v) =>
+  String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 let ALUNO = null;
 let PROGRESSO = {};      // { [idAula]: timestamp }
 const TODAS_AULAS = CURRICULO.flatMap((m) => m.aulas.map((a) => ({ ...a, modulo: m })));
@@ -83,7 +102,7 @@ function embedVideo(v, titulo) {
 
 function player(aula) {
   const emb = embedVideo(aula.v, aula.t);
-  const agua = `<div class="player-agua">${ALUNO.email} · ${ALUNO.codigo}</div>`;
+  const agua = `<div class="player-agua">${esc(ALUNO.email)} · ${esc(ALUNO.codigo)}</div>`;
   if (emb) return `<div class="player">${emb}${agua}</div>`;
   return `<div class="player">
     <div class="player-vazio">
@@ -155,7 +174,7 @@ function pgPainel() {
 
   return `
     <div class="painel-cab">
-      <h1>Bem-vindo de volta, ${ALUNO.nome.split(' ')[0]}</h1>
+      <h1>Bem-vindo de volta, ${esc(ALUNO.nome.split(' ')[0])}</h1>
       <p class="lead">${pct === 0
         ? 'Sua primeira aula está logo abaixo. Comece por ela.'
         : `Você já concluiu ${feitas} de ${total} aulas — ${pct}% do caminho.`}</p>
@@ -446,12 +465,12 @@ function pgConta() {
   </div>
 
   <div class="dados">
-    <div class="dado"><span>Nome</span><b>${ALUNO.nome}</b></div>
-    <div class="dado"><span>E-mail</span><b>${ALUNO.email}</b></div>
+    <div class="dado"><span>Nome</span><b>${esc(ALUNO.nome)}</b></div>
+    <div class="dado"><span>E-mail</span><b>${esc(ALUNO.email)}</b></div>
     <div class="dado"><span>Plano</span><b>${p.nome}</b></div>
     <div class="dado">
       <span>Código de acesso</span>
-      <b><code>${ALUNO.codigo}</code>
+      <b><code>${esc(ALUNO.codigo)}</code>
       <button id="copiarCodigo" style="margin-left:.5rem;color:var(--ouro-claro);font-size:.8rem">copiar</button></b>
     </div>
     <div class="dado"><span>Compra</span><b>${data(ALUNO.compradoEm)}</b></div>
@@ -637,6 +656,14 @@ function ligarCalculadoras() {
         rotuloUn: v('m5-rot'), capsulaUn: v('m5-cap'),
         perdaPct: v('m5-per'),
       });
+      // O erro da ficha técnica precisa aparecer como ELE é. Deixar seguir para
+      // precificar() trocava "perda inválida" por "custo unitário maior que
+      // zero" — mensagem que não tem relação com o campo que a pessoa mexeu.
+      if (f.erro) {
+        $('#m5-out').innerHTML = box('Garrafas do lote', 0);
+        $('#m5-msg').innerHTML = `<div class="calc-alerta">${f.erro}</div>`;
+        return;
+      }
       const p = CALC.precificar({
         custoUnitario: f.custoUnitario, impostoPct: v('m5-imp'),
         comissaoPct: v('m5-com'), margemPct: v('m5-mar'), perdaPct: 0,

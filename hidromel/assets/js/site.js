@@ -9,6 +9,12 @@ import * as API from './api.js';
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
+/** Escapa antes de interpolar em HTML. A mensagem de erro vem do servidor e
+ *  pode conter texto de terceiro (Mercado Pago, plataforma externa). */
+const esc = (v) => String(v ?? '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 /** Parcelamento realista: adquirentes não aceitam parcela abaixo de ~R$ 5.
  *  Anunciar "12x de R$ 3,92" e o checkout oferecer 9x destrói a confiança
  *  exatamente no momento do pagamento. */
@@ -480,7 +486,7 @@ const revelar = (() => {
       result.classList.remove('oculto');
       result.innerHTML = `<div class="dor-item" style="margin-top:1rem">
         <div><strong>Não consegui gerar o pedido.</strong><br>
-        <span class="mini">${erro.message}</span><br>
+        <span class="mini">${esc(erro.message)}</span><br>
         <span class="mini">Se o problema continuar, fale com
         <a href="mailto:${CONFIG.EMAIL_SUPORTE}">${CONFIG.EMAIL_SUPORTE}</a>.</span></div></div>`;
     }

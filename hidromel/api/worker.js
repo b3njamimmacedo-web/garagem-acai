@@ -49,6 +49,31 @@ const enc = new TextEncoder();
 const paraHex = (buf) =>
   [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 
+/** Escapa para HTML. O nome vem do checkout, digitado pelo comprador —
+ *  sem isto, `<img src=x onerror=...>` no campo nome entra cru no e-mail
+ *  de acesso que enviamos. */
+const escH = (v) =>
+  String(v ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+/** Limpa texto livre: tira caracteres de controle e colapsa espaços.
+ *  NÃO trunca — truncar antes de validar transforma um nome longo mas válido
+ *  em "nome sem sobrenome", e o cliente recebe uma mensagem que não faz
+ *  sentido. Truncar é passo de gravação, feito por `cortar`. */
+function limpar(v) {
+  return String(v ?? '')
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')  // controles quebram cabecalho de e-mail
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Corta para gravar. Sem limite, um POST com 100 mil caracteres no nome vai
+ *  inteiro para o KV (que cobra por tamanho) e para o corpo do e-mail. */
+const cortar = (v, max) => limpar(v).slice(0, max);
+
+const LIMITES = { nome: 120, email: 160, telefone: 24, cpf: 14 };
+
 async function hmac(segredo, mensagem) {
   const chave = await crypto.subtle.importKey(
     'raw', enc.encode(segredo), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
@@ -283,13 +308,13 @@ function corpoEmail({ nome, codigo, link, plano, bump }) {
     </td></tr>
 
     <tr><td style="padding:28px 32px;font-size:15px;line-height:1.65">
-      <p style="margin:0 0 16px">Olá, <strong style="color:#F3E9D2">${nome}</strong>.</p>
+      <p style="margin:0 0 16px">Olá, <strong style="color:#F3E9D2">${escH(nome)}</strong>.</p>
       <p style="margin:0 0 22px">Seu pagamento foi aprovado e o acesso ao plano
         <strong style="color:#F5C542">${p.nome}</strong> está liberado${bump ? `, junto com o <strong>${BUMP.nome}</strong>` : ''}.</p>
 
       <table role="presentation" width="100%" style="margin:0 0 24px">
         <tr><td align="center">
-          <a href="${link}" style="display:inline-block;background:#D4A017;color:#1a1206;
+          <a href="${escH(link)}" style="display:inline-block;background:#D4A017;color:#1a1206;
              text-decoration:none;padding:15px 34px;border-radius:5px;font-weight:700;
              font-size:15px;letter-spacing:1.5px">ENTRAR NO CURSO</a>
         </td></tr>
@@ -297,7 +322,7 @@ function corpoEmail({ nome, codigo, link, plano, bump }) {
 
       <div style="background:rgba(0,0,0,.4);border:1px solid rgba(212,160,23,.3);border-radius:6px;padding:18px;margin-bottom:22px">
         <div style="font-size:11px;letter-spacing:2px;color:#D4A017;margin-bottom:8px">SEU CÓDIGO DE ACESSO PESSOAL</div>
-        <div style="font-family:'Courier New',monospace;font-size:19px;color:#F5C542;letter-spacing:2.5px;font-weight:700">${codigo}</div>
+        <div style="font-family:'Courier New',monospace;font-size:19px;color:#F5C542;letter-spacing:2.5px;font-weight:700">${escH(codigo)}</div>
         <div style="font-size:12px;color:#8A7B62;margin-top:10px">
           O botão acima entra direto. Este código serve para acessar de outro
           aparelho — use com o e-mail desta mensagem.
@@ -310,7 +335,7 @@ function corpoEmail({ nome, codigo, link, plano, bump }) {
       </p>
       <p style="margin:16px 0 0;font-size:13px;color:#8A7B62">
         Se o botão não funcionar, copie este endereço:<br>
-        <span style="color:#D4A017;word-break:break-all">${link}</span>
+        <span style="color:#D4A017;word-break:break-all">${escH(link)}</span>
       </p>
     </td></tr>
 
@@ -354,10 +379,33 @@ async function enviarEmail(env, { para, assunto, html }) {
  * vezes (e ele chega — o MP reenvia), o aluno NÃO recebe dois códigos.
  */
 async function liberarAcesso(env, { pedidoId, email, nome, plano, bump, origem, telefone }) {
+  // Plano desconhecido (PLANOS_EXTERNOS mal configurado, payload mudado pela
+  // plataforma) derrubava o webhook com 500 — e o cliente pagava sem receber
+  // nada. Agora cai no plano de entrada e o caso fica registrado no log.
+  if (!PLANOS[plano]) {
+    console.error(`[liberar] plano desconhecido "${plano}" no pedido ${pedidoId}; usando iniciado`);
+    plano = 'iniciado';
+  }
   const chavePedido = 'pedido:' + pedidoId;
   const existente = await env.ALUNOS.get(chavePedido, 'json');
   if (existente?.codigo) {
     return { ...existente, jaExistia: true };
+  }
+
+  // O KV não tem transação. Dois webhooks do mesmo pagamento chegando juntos
+  // passariam os dois pela checagem acima e gerariam dois códigos. Marcamos a
+  // posse antes de trabalhar e conferimos logo depois — não é um lock de
+  // verdade, mas fecha a janela de milissegundos que o reenvio do Mercado Pago
+  // realmente produz.
+  const marca = crypto.randomUUID();
+  const chaveLock = 'lock:' + pedidoId;
+  const dono = await env.ALUNOS.get(chaveLock);
+  if (dono) {
+    return { status: 'em_processamento', pedidoId };
+  }
+  await env.ALUNOS.put(chaveLock, marca, { expirationTtl: 120 });
+  if ((await env.ALUNOS.get(chaveLock)) !== marca) {
+    return { status: 'em_processamento', pedidoId };
   }
 
   const emailNorm = normalizarEmail(email);
@@ -374,9 +422,9 @@ async function liberarAcesso(env, { pedidoId, email, nome, plano, bump, origem, 
   const expiraEm = agora + PLANOS[planoFinal].anos * 365 * 864e5;
 
   const aluno = {
-    nome: nome || anterior?.nome || 'Aluno',
+    nome: cortar(nome, LIMITES.nome) || anterior?.nome || 'Aluno',
     email: emailNorm,
-    telefone: telefone || anterior?.telefone || '',
+    telefone: cortar(telefone, LIMITES.telefone) || anterior?.telefone || '',
     plano: planoFinal,
     codigo,
     bump: !!bump || !!anterior?.bump,
@@ -396,7 +444,7 @@ async function liberarAcesso(env, { pedidoId, email, nome, plano, bump, origem, 
   });
   const link = `${env.URL_SITE}/curso/#/entrar?t=${token}`;
 
-  const registro = { codigo, email: emailNorm, plano: planoFinal, link, status: 'aprovado' };
+  const registro = { codigo, email: emailNorm, plano: planoFinal, link, status: 'aprovado', aprovadoEm: agora };
   await env.ALUNOS.put(chavePedido, JSON.stringify(registro));
 
   await enviarEmail(env, {
@@ -421,12 +469,24 @@ async function rotaPedido(req, env) {
   const d = await req.json().catch(() => null);
   if (!d) return erro('Corpo inválido.');
 
-  const { plano, nome, email, cpf, telefone, bump, metodo } = d;
+  // Corta ANTES de validar: sem isso um nome de 100 mil caracteres passa pela
+  // validação e vai inteiro para o KV, para o Mercado Pago e para o e-mail.
+  const plano    = d.plano;
+  const metodo   = d.metodo;
+  const bump     = d.bump;
+  // Limpa e VALIDA no texto inteiro; só depois corta para gravar.
+  const nomeLimpo = limpar(d.nome);
+  const email     = cortar(d.email, LIMITES.email);
+  const cpf       = cortar(d.cpf, LIMITES.cpf);
+  const telefone  = cortar(d.telefone, LIMITES.telefone);
+
   if (!PLANOS[plano]) return erro('Plano inválido.');
-  if (!nome || String(nome).trim().split(/\s+/).length < 2) return erro('Informe o nome completo.');
+  if (!nomeLimpo || nomeLimpo.split(' ').length < 2) return erro('Informe o nome completo.');
   if (!emailValido(email)) return erro('E-mail inválido.');
   if (!cpfValido(cpf)) return erro('CPF inválido.');
   if (metodo !== 'pix' && metodo !== 'cartao') return erro('Método de pagamento inválido.');
+
+  const nome = nomeLimpo.slice(0, LIMITES.nome);
 
   const pedidoId = 'HDR-' + crypto.randomUUID();
   const emailNorm = normalizarEmail(email);
@@ -468,7 +528,15 @@ async function rotaConsultarPedido(pedidoId, env) {
   const reg = await env.ALUNOS.get('pedido:' + pedidoId, 'json');
   if (!reg) return erro('Pedido não encontrado.', 404);
   if (reg.status === 'aprovado') {
-    return json({ status: 'aprovado', codigo: reg.codigo, email: reg.email, plano: reg.plano, link: reg.link });
+    // A credencial só sai por 1 hora depois da aprovação. Esta rota é pública
+    // por natureza (a página de obrigado consulta sem estar logada) e o id do
+    // pedido fica na URL, que o cliente pode compartilhar ou printar. Passada a
+    // janela, o acesso é pelo e-mail — que é onde a credencial deve viver.
+    const recente = reg.aprovadoEm && (Date.now() - reg.aprovadoEm) < 60 * 60 * 1000;
+    if (recente) {
+      return json({ status: 'aprovado', codigo: reg.codigo, email: reg.email, plano: reg.plano, link: reg.link });
+    }
+    return json({ status: 'aprovado', expirado: true, email: reg.email, plano: reg.plano });
   }
   return json({ status: reg.status || 'pendente' });
 }
@@ -660,9 +728,18 @@ async function rotaEu(req, env) {
   const { token } = await req.json().catch(() => ({}));
   const d = await lerToken(env, token);
   if (!d) return erro('Sessão inválida.', 401);
+  // O token do link de e-mail vale 30 dias e serve para ENTRAR uma vez, não
+  // para ser sessão. Aceitá-lo aqui estendia a validade de um link que circula
+  // por caixa de entrada.
+  if (d.t && d.t !== 'sessao') return erro('Use o link para entrar primeiro.', 401, 'tipo_token');
 
   const aluno = await env.ALUNOS.get('aluno:' + d.email, 'json');
   if (!aluno) return erro('Cadastro não encontrado.', 404);
+  // Sem esta checagem, trocar o código do aluno (suporte, suspeita de vazamento)
+  // NÃO derrubava as sessões já abertas — a revogação não revogava nada.
+  if (d.codigo && aluno.codigo !== d.codigo) {
+    return erro('Credencial revogada. Entre novamente.', 401, 'revogado');
+  }
   if (new Date(aluno.expiraEm) < new Date()) return erro('Acesso expirado.', 403, 'expirado');
 
   // O plano vem sempre do KV, nunca do token: assim um upgrade vale na hora,
@@ -695,6 +772,7 @@ export default {
           mp: !!env.MP_ACCESS_TOKEN,
           webhookAssinado: !!env.MP_WEBHOOK_SECRET,
           email: !!env.RESEND_API_KEY,
+          origemTravada: !!env.ORIGEM_PERMITIDA && env.ORIGEM_PERMITIDA !== '*',
         }));
       }
 

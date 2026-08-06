@@ -81,12 +81,14 @@ hidromel/
 │   ├── gerar_pdfs.py            gera os PDFs
 │   ├── gerar_legal.py           gera termos/privacidade/reembolso
 │   ├── receitas.py              conteúdo das 30 receitas
+│   ├── analisar-producao.mjs    custo de produção dos vídeos
 │   ├── testar-calculadoras.mjs  22 testes
 │   └── testar-worker.mjs        62 testes
 ├── docs/
 │   ├── LANCAMENTO.md       estratégia de 30 dias + copy de anúncios
 │   ├── PAGAMENTOS.md       comparativo de taxas e configuração
 │   ├── JURIDICO.md         MAPA, MEI, rótulo, LGPD, o que não pode
+│   ├── PRODUCAO-VIDEO.md   como cortar 96% da filmagem (aula-base + delta)
 │   ├── VIDEOS-ROTEIROS.md  o que gravar, como e em que ordem
 │   └── legal/              termos · privacidade · reembolso (HTML)
 └── ARQUITETURA.md          as decisões e o porquê de cada uma
@@ -149,8 +151,10 @@ Detalhes e o porquê de cada decisão: `ARQUITETURA.md` §4.4.
 
 Registrado aqui de propósito:
 
-1. **Gravar os 112 vídeos.** A infraestrutura está pronta e cada aula tem
-   roteiro; a gravação é humana.
+1. **Gravar os vídeos.** A infraestrutura está pronta e cada aula tem roteiro.
+   Com o esquema aula-base + delta, são 17 aulas de bancada, 20 deltas curtos,
+   7 capturas de tela e 68 narrações — não 112 gravações. Ver
+   `docs/PRODUCAO-VIDEO.md`.
 2. **Fotografia real do produto.** A arte é vetorial autoral e fica premium, mas
    foto de garrafa real converte mais. Os espaços já existem.
 3. **Depoimentos.** Nenhum foi inventado — os cards estão marcados como

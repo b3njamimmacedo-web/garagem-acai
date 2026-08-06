@@ -13,6 +13,7 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 let ALUNO = null;
 let PROGRESSO = {};      // { [idAula]: timestamp }
 const TODAS_AULAS = CURRICULO.flatMap((m) => m.aulas.map((a) => ({ ...a, modulo: m })));
+const AULA_POR_ID = new Map(TODAS_AULAS.map((a) => [a.id, a]));
 
 /* --------------------------------------------------------------- AVISOS */
 function toast(msg, ms = 2600) {
@@ -174,6 +175,45 @@ function pgPainel() {
     <div class="grade-mod">${cards}</div>`;
 }
 
+/** "Etapas que você já viu" — o coração da montagem modular do curso.
+ *  Em vez de repetir sanitização, mosto e trasfega em toda receita, a aula
+ *  aponta para onde cada etapa foi ensinada e mostra só o que muda. */
+function blocoBase(aula) {
+  if (!aula.base?.length && !aula.novo) return '';
+
+  const etapas = (aula.base || [])
+    .map((id) => AULA_POR_ID.get(id))
+    .filter(Boolean)
+    .map((b) => {
+      const feita = !!PROGRESSO[b.id];
+      return `<button class="etapa-base ${feita ? 'feita' : ''}"
+                data-ir="#/${b.modulo.id}/${b.id}">
+        <span class="marca"></span>
+        <span class="txt"><b>${b.t}</b>
+        <span>Módulo ${String(b.modulo.n).padStart(2, '0')} · ${b.m} min</span></span>
+        <span class="rever">rever ↗</span>
+      </button>`;
+    }).join('');
+
+  const naoVistas = (aula.base || []).filter((id) => !PROGRESSO[id]).length;
+
+  return `
+  <div class="base-caixa">
+    ${aula.novo ? `<div class="base-novo">
+      <span class="rot">O que muda nesta receita</span>
+      <p>${aula.novo}</p>
+    </div>` : ''}
+    ${etapas ? `
+      <div class="base-rot">
+        Etapas em comum, já ensinadas
+        ${naoVistas ? `<em>— ${naoVistas} que você ainda não viu</em>` : '<em>— todas concluídas ✓</em>'}
+      </div>
+      <p class="base-exp">Esta aula não repete estas etapas. O processo é idêntico
+        ao que você já aprendeu — clique para rever qualquer uma.</p>
+      <div class="base-lista">${etapas}</div>` : ''}
+  </div>`;
+}
+
 function pgAula(modId, aulaId) {
   const m = CURRICULO.find((x) => x.id === modId);
   if (!m) return pgPainel();
@@ -218,6 +258,8 @@ function pgAula(modId, aulaId) {
                  : 'disabled'}>Próxima →</button>
       </div>
     </div>
+
+    ${blocoBase(aula)}
 
     ${aula.pdf ? `<h3 style="font-size:1.05rem;margin-bottom:.3rem">Material desta aula</h3>
       <a class="anexo" href="../material/${aula.pdf}" download>

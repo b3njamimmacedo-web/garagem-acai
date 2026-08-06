@@ -242,6 +242,48 @@
 .anexo span { font-size: .8rem; color: var(--fumaca); }
 .anexo .baixar { margin-left: auto; color: var(--ouro-claro); font-size: .84rem; font-weight: 600; flex-shrink: 0; }
 
+/* ------------------------------------------------- ETAPAS REAPROVEITADAS */
+.base-caixa {
+  border: var(--borda); border-radius: var(--raio-g); padding: 1.3rem;
+  margin: 1.6rem 0; background: rgba(31,22,13,.45);
+}
+.base-novo {
+  border-left: 3px solid var(--ouro); padding-left: 1rem; margin-bottom: 1.4rem;
+}
+.base-novo .rot {
+  display: block; font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ouro); font-weight: 700; margin-bottom: .35rem;
+}
+.base-novo p { font-size: 1rem; color: var(--pergaminho); }
+
+.base-rot {
+  font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--fumaca); font-weight: 700; margin-bottom: .4rem;
+}
+.base-rot em { font-style: normal; color: var(--ouro-esc); letter-spacing: .06em; }
+.base-exp { font-size: .86rem; color: var(--fumaca); margin-bottom: .9rem; max-width: 62ch; }
+
+.base-lista { display: grid; gap: .4rem; }
+.etapa-base {
+  display: flex; align-items: center; gap: .8rem; width: 100%; text-align: left;
+  padding: .7rem .9rem; border-radius: var(--raio); border: var(--borda);
+  transition: border-color .2s, background .2s;
+}
+.etapa-base:hover { border-color: rgba(212,160,23,.45); background: rgba(212,160,23,.06); }
+.etapa-base .marca {
+  width: 15px; height: 15px; border-radius: 50%; flex-shrink: 0; position: relative;
+  border: 1.5px solid rgba(212,160,23,.35);
+}
+.etapa-base.feita .marca { background: #3f9a7c; border-color: #3f9a7c; }
+.etapa-base.feita .marca::after {
+  content: '✓'; position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 10px; color: #06170f; font-weight: 900;
+}
+.etapa-base .txt { flex: 1; min-width: 0; }
+.etapa-base .txt b { display: block; font-size: .9rem; color: var(--pergaminho); font-weight: 600; }
+.etapa-base .txt span { font-size: .76rem; color: var(--fumaca); }
+.etapa-base .rever { font-size: .78rem; color: var(--ouro-claro); flex-shrink: 0; }
+
 /* ---------------------------------------------------------- BLOQUEADO */
 .bloqueio {
   text-align: center; padding: clamp(2rem, 6vw, 4rem) 1.4rem;

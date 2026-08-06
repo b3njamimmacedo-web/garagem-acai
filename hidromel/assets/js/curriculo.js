@@ -16,6 +16,22 @@
      lab   true = aula prática (mão na massa), ganha selo diferente
      free  true = aula liberada como amostra grátis na página de vendas
 
+     base  IDs das aulas que JÁ ensinaram as etapas em comum desta receita.
+           A área de membros renderiza como "Etapas que você já viu", com link
+           para rever. O vídeo desta aula NÃO repete essas etapas.
+     novo  o que efetivamente muda em relação à base — é a única parte que
+           precisa de filmagem nova.
+
+     Por que isso existe (vale mais que economia de produção):
+       · Didática. Repetir "sanitize, dissolva o mel, meça a OG" trinta vezes
+         treina o aluno a pular o começo de toda aula. Ensinar a base uma vez e
+         depois só o delta mantém a atenção onde está a informação nova.
+       · Produção. Sem isso, filmar 20 receitas exigiria produzir 20 lotes reais
+         (20 × 6 kg de mel e 90 dias cada). Com isso, 3 ou 4 lotes-base
+         atendem todas — só os deltas precisam de bancada.
+       · Manutenção. Melhorou a técnica de sanitização? Regrava UMA aula, não
+         trinta.
+
    Campos de módulo:
      plano  iniciado | mestre | real   (nível MÍNIMO que libera o módulo)
 ============================================================================= */
@@ -213,25 +229,46 @@ export const CURRICULO = [
     cor: '#6B1F2A',
     destaque: true,
     aulas: [
+      /* Todas herdam o processo-base do Módulo 5. Só o delta é filmado. */
       { id: 'a0601', t: 'Metheglin — o hidromel das especiarias', m: 19, v: null,
+        base: ['a0502', 'a0503', 'a0504', 'a0505'],
+        novo: 'Extrato frio de especiarias e a adição na secundária, provando a cada 12 h.',
         d: 'Do galês "meddyglyn", bebida medicinal. Canela, cravo, gengibre, noz-moscada. Receita fechada + quando adicionar cada especiaria.' },
-      { id: 'a0602', t: 'Melomel — hidromel com frutas', m: 20, v: null,
+      { id: 'a0602', t: 'Melomel — hidromel com frutas', m: 20, v: null, lab: true,
+        base: ['a0502', 'a0503', 'a0504', 'a0505'],
+        novo: 'Congelar/descongelar a fruta, saco de malha na secundária e pectinase. É a técnica que as outras receitas de fruta reaproveitam.',
         d: 'A categoria mais comercial. Proporção fruta/mel, primária x secundária, e as 6 frutas brasileiras que funcionam melhor.' },
       { id: 'a0603', t: 'Cyser — mel e maçã', m: 16, v: null,
+        base: ['a0502', 'a0503', 'a0504', 'a0505'],
+        novo: 'Substituir parte da água por suco integral e ajustar o pH antes de inocular.',
         d: 'O clássico inglês. Suco puro x fruta inteira, e por que cyser é a porta de entrada mais fácil para quem nunca bebeu hidromel.' },
       { id: 'a0604', t: 'Pyment — mel e uva', m: 17, v: null,
+        base: ['a0502', 'a0503', 'a0504', 'a0603'],
+        novo: 'Tanino enológico no mosto e a escolha de cepa tinta.',
         d: 'A ponte entre hidromel e vinho. Tinto e branco, e o hippocras (pyment com especiarias) das cortes medievais.' },
-      { id: 'a0605', t: 'Braggot — mel e malte', m: 18, v: null,
+      { id: 'a0605', t: 'Braggot — mel e malte', m: 18, v: null, lab: true,
+        base: ['a0503', 'a0504', 'a0505'],
+        novo: 'ETAPA NOVA: mostura do malte, fervura e lúpulo. O mel entra só depois de resfriar.',
         d: 'O híbrido cerveja-hidromel do País de Gales. Mostura simplificada, proporções e o lúpulo na medida certa.' },
       { id: 'a0606', t: 'Bochet — o mel caramelizado', m: 22, v: null, lab: true,
+        base: ['a0503', 'a0504', 'a0505'],
+        novo: 'ETAPA NOVA: caramelizar o mel a 130 °C. Filmada integralmente, com as precauções de segurança.',
         d: 'A técnica medieval mais impressionante: cozinhar o mel até caramelizar. Notas de toffee, marshmallow e chocolate. O passo a passo com segurança — mel a 130°C queima gente.' },
-      { id: 'a0607', t: 'Sack Mead — o hidromel forte e doce', m: 15, v: null,
+      { id: 'a0607', t: 'Sack Mead — o hidromel forte e doce', m: 15, v: null, lab: true,
+        base: ['a0502', 'a0503', 'a0504'],
+        novo: 'ETAPA NOVA: step feeding — alimentar o mel em 4 etapas para não dar choque osmótico.',
         d: 'Alto teor de mel, doçura residual, 14–18% ABV. O estilo de sobremesa que sustenta preço premium.' },
       { id: 'a0608', t: 'Acerglyn e Rhodomel — bordo e rosas', m: 14, v: null,
+        base: ['a0502', 'a0503', 'a0601'],
+        novo: 'Infusão de pétalas: janela curta e o ponto em que vira sabonete.',
         d: 'Duas categorias raras. Rhodomel com pétalas de rosa é o produto de casamento com maior margem que existe.' },
       { id: 'a0609', t: 'T\'ej etíope e o gesho', m: 16, v: null,
+        base: ['a0502', 'a0503', 'a0601'],
+        novo: 'Chá de gesho (e o substituto brasileiro), fermentação quente e por que NÃO clarificar.',
         d: 'A tradição viva mais antiga do mundo. Como substituir o gesho (Rhamnus prinoides) com ingrediente disponível no Brasil.' },
       { id: 'a0610', t: 'Trójniak, Dwójniak e a escala polonesa', m: 15, v: null,
+        base: ['a0502', 'a0503', 'a0504'],
+        novo: 'Proporção mel:água em volume e o aquecimento a 70 °C no lugar da fervura tradicional.',
         d: 'Półtorak, dwójniak, trójniak, czwórniak: o sistema polonês de proporção mel:água, protegido por indicação geográfica na UE.' },
     ],
   },
@@ -326,19 +363,35 @@ export const CURRICULO = [
     aulas: [
       { id: 'a1001', t: 'A lógica do produto que ninguém tem', m: 16, v: null,
         d: 'Por que receita inusitada não é capricho: é a única forma de fugir da comparação de preço. O critério para inventar sem errar.' },
+      /* A linha premium herda das medievais: cada produto é uma técnica já
+         ensinada + um ingrediente novo. Nenhuma refaz o processo do zero. */
       { id: 'a1002', t: 'Bochet de café e cardamomo', m: 20, v: null,
+        base: ['a0606', 'a0704'],
+        novo: 'Cold brew de 16 h e a janela estreita do cardamomo. A caramelização é a do Módulo 6.',
         d: 'Mel caramelizado + café de origem em cold brew + cardamomo verde. O produto de maior margem da linha: custo R$ 19, venda R$ 149.' },
       { id: 'a1003', t: 'Melomel de jabuticaba com amburana', m: 19, v: null,
+        base: ['a0602', 'a0804'],
+        novo: 'Proporção da jabuticaba e a dosagem da amburana — 20 g já bastam em 20 L.',
         d: 'Fruta 100% brasileira + madeira 100% brasileira. Cor de rubi, nota de baunilha. O produto-bandeira para exportação e presente.' },
-      { id: 'a1004', t: 'Capsicumel de pimenta rosa e mel de aroeira', m: 18, v: null,
+      { id: 'a1004', t: 'Capsicumel de pimenta rosa e mel de aroeira', m: 18, v: null, lab: true,
+        base: ['a0601', 'a0704'],
+        novo: 'ETAPA NOVA: dois extratos separados — aroma e picância — dosados de forma independente.',
         d: 'Picância controlada. Como dosar capsaicina sem tornar impossível de beber, e o pareamento com carnes que vende em restaurante.' },
       { id: 'a1005', t: 'Hidromel de hibisco e gengibre', m: 16, v: null,
+        base: ['a0601', 'a0703'],
+        novo: 'A janela de 72 h do hibisco e por que quitosana preserva a cor melhor que bentonita.',
         d: 'Cor magenta impossível de ignorar na foto. O produto feito para Instagram — e que ainda assim é sério no copo.' },
       { id: 'a1006', t: 'Sack mead de mel de cipó-uva com baunilha', m: 17, v: null,
+        base: ['a0607', 'a0704'],
+        novo: 'Fava de baunilha aberta na infusão. O step feeding é o do Módulo 6.',
         d: 'Sobremesa em garrafa de 375ml. Ticket alto, volume baixo, giro de fim de ano.' },
       { id: 'a1007', t: 'Braggot de café torrado e cacau nibs', m: 18, v: null,
+        base: ['a0605'],
+        novo: 'Tostar os nibs a 150 °C e o cold brew nos últimos 3 dias da secundária.',
         d: 'Corpo de stout, alma de hidromel. O produto que converte bebedor de cerveja artesanal.' },
       { id: 'a1008', t: 'Hidromel seco de eucalipto para harmonização', m: 15, v: null,
+        base: ['a0502', 'a0503', 'a0703'],
+        novo: 'Fermentação a 14–16 °C até secar totalmente e clarificação com bentonita.',
         d: 'Seco, mineral, 11% ABV. O produto que entra em carta de restaurante — onde o preço por garrafa triplica.' },
       { id: 'a1009', t: 'Série limitada: barril, safra e numeração', m: 19, v: null,
         d: 'Como construir escassez real e não fabricada. Numeração manual, safra e o efeito no preço e na lista de espera.' },

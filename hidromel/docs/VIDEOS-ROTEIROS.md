@@ -4,6 +4,10 @@ O sistema está pronto: player, progresso, ordem das aulas, marcação de conclu
 e marca d'água. **O que falta é uma pessoa gravar.** Não existe atalho para isso,
 e este documento existe para tornar a gravação o mais mecânica possível.
 
+> **Leia `PRODUCAO-VIDEO.md` antes deste.** Ele mostra como cortar a filmagem em
+> 96% com aula-base + delta, e por que 68 das 112 aulas não precisam de vídeo
+> nenhum — só de narração sobre imagem. Muda a ordem de gravação abaixo.
+
 ---
 
 ## Como o vídeo entra no sistema

@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 460" width="260" height="460">
+
+<defs>
+  <linearGradient id="g45" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#7A5E14"/>
+    <stop offset="18%"  stop-color="#D4A017"/>
+    <stop offset="38%"  stop-color="#FBE08A"/>
+    <stop offset="52%"  stop-color="#F5C542"/>
+    <stop offset="70%"  stop-color="#B8860B"/>
+    <stop offset="88%"  stop-color="#6F5411"/>
+    <stop offset="100%" stop-color="#A87D18"/>
+  </linearGradient>
+  <radialGradient id="b48" cx="50%" cy="50%" r="50%">
+    <stop offset="0%"   stop-color="#8E1B4A" stop-opacity="0.4"/>
+    <stop offset="55%"  stop-color="#8E1B4A" stop-opacity="0.1"/>
+    <stop offset="100%" stop-color="#8E1B4A" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="l46" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%"   stop-color="#8E1B4A" stop-opacity="0.95"/>
+    <stop offset="30%"  stop-color="#8E1B4A" stop-opacity="0.7"/>
+    <stop offset="55%"  stop-color="#FFF" stop-opacity="0.22"/>
+    <stop offset="70%"  stop-color="#8E1B4A" stop-opacity="0.8"/>
+    <stop offset="100%" stop-color="#000" stop-opacity="0.45"/>
+  </linearGradient>
+  <linearGradient id="v47" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#FFF" stop-opacity="0.05"/>
+    <stop offset="22%" stop-color="#FFF" stop-opacity="0.30"/>
+    <stop offset="40%" stop-color="#FFF" stop-opacity="0.04"/>
+    <stop offset="100%" stop-color="#000" stop-opacity="0.28"/>
+  </linearGradient>
+</defs>
+<ellipse cx="130" cy="440" rx="86" ry="14" fill="url(#b48)"/>
+<!-- corpo -->
+<path d="M104 40 h52 v72 q0 22 16 40 q18 20 18 48 v186 a20 20 0 0 1 -20 20 h-80 a20 20 0 0 1 -20 -20 v-186 q0 -28 18 -48 q16 -18 16 -40z"
+      fill="url(#l46)"/>
+<path d="M104 40 h52 v72 q0 22 16 40 q18 20 18 48 v186 a20 20 0 0 1 -20 20 h-80 a20 20 0 0 1 -20 -20 v-186 q0 -28 18 -48 q16 -18 16 -40z"
+      fill="url(#v47)" stroke="#D4A017" stroke-opacity="0.45" stroke-width="1.5"/>
+<!-- cápsula -->
+<path d="M100 34 h60 v34 q-30 8 -60 0z" fill="url(#g45)"/>
+<rect x="100" y="26" width="60" height="12" rx="4" fill="#6B1F2A"/>
+<!-- rótulo -->
+<rect x="66" y="228" width="128" height="136" rx="5" fill="#EFE0C6"/>
+<rect x="72" y="234" width="116" height="124" rx="3" fill="none" stroke="#D4A017" stroke-width="1.4" stroke-opacity="0.9"/>
+<g transform="translate(76 238) rotate(0) scale(0.5)" fill="none"
+      stroke="#8A6D1F" stroke-opacity="0.9" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.45"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#8A6D1F" fill-opacity="0.675" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#8A6D1F" fill-opacity="0.9" stroke="none"/>
+  </g>
+<g transform="translate(184 238) rotate(90) scale(0.5)" fill="none"
+      stroke="#8A6D1F" stroke-opacity="0.9" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.45"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#8A6D1F" fill-opacity="0.675" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#8A6D1F" fill-opacity="0.9" stroke="none"/>
+  </g>
+<g transform="translate(184 354) rotate(180) scale(0.5)" fill="none"
+      stroke="#8A6D1F" stroke-opacity="0.9" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.45"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#8A6D1F" fill-opacity="0.675" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#8A6D1F" fill-opacity="0.9" stroke="none"/>
+  </g>
+<g transform="translate(76 354) rotate(270) scale(0.5)" fill="none"
+      stroke="#8A6D1F" stroke-opacity="0.9" stroke-width="1.6" stroke-linecap="round">
+    <path d="M0 34 L0 8 Q0 0 8 0 L34 0"/>
+    <path d="M6 30 L6 12 Q6 6 12 6 L30 6" stroke-opacity="0.45"/>
+    <path d="M14 14 q10 -8 20 -2 q-9 3 -12 9 q-4 -6 -8 -7z" fill="#8A6D1F" fill-opacity="0.675" stroke="none"/>
+    <circle cx="9" cy="9" r="2" fill="#8A6D1F" fill-opacity="0.9" stroke="none"/>
+  </g>
+<g transform="translate(105 246) scale(0.5)"><g stroke="#8A6D1F" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 40 L30 66 L50 26 L70 66 L84 40 L88 82 h-76z"/>
+    <path d="M16 40 L30 66 L50 26 L70 66 L84 40 L88 82 h-76z" fill="#8A6D1F" fill-opacity="0.2" stroke="none"/>
+    <circle cx="16" cy="36" r="5" fill="#8A6D1F" stroke="none"/>
+    <circle cx="50" cy="20" r="6" fill="#8A6D1F" stroke="none"/>
+    <circle cx="84" cy="36" r="5" fill="#8A6D1F" stroke="none"/>
+    <path d="M20 90 h60" /></g></g>
+<path d="M84 306 h92" stroke="#8A6D1F" stroke-width="1.2"/>
+<text x="130" y="326" text-anchor="middle" font-family="Georgia,serif" font-size="14"
+      font-weight="700" letter-spacing="1" fill="#1a1208">HIBISCO</text>
+<text x="130" y="344" text-anchor="middle" font-family="Georgia,serif" font-size="8"
+      letter-spacing="3" fill="#4a3b1e">HIDROMEL · 750ml</text>
+<!-- reflexo -->
+<path d="M112 130 q-6 40 -4 120 q1 60 2 130" stroke="#FFF" stroke-opacity="0.28"
+      stroke-width="7" fill="none" stroke-linecap="round"/>
+
+</svg>

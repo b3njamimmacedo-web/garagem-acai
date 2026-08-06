@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">
+
+<defs><linearGradient id="g3h" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#7A5E14"/>
+    <stop offset="18%"  stop-color="#D4A017"/>
+    <stop offset="38%"  stop-color="#FBE08A"/>
+    <stop offset="52%"  stop-color="#F5C542"/>
+    <stop offset="70%"  stop-color="#B8860B"/>
+    <stop offset="88%"  stop-color="#6F5411"/>
+    <stop offset="100%" stop-color="#A87D18"/>
+  </linearGradient><pattern id="fv3i" width="18.00" height="20.78" patternUnits="userSpaceOnUse">
+    <polygon points="12.00,0.00 6.00,10.39 -6.00,10.39 -12.00,0.00 -6.00,-10.39 6.00,-10.39" fill="none" stroke="#D4A017" stroke-opacity="0.14" stroke-width="1.1"/>
+    <polygon points="12.00,20.78 6.00,31.18 -6.00,31.18 -12.00,20.78 -6.00,10.39 6.00,10.39" fill="none" stroke="#D4A017" stroke-opacity="0.14" stroke-width="1.1"/>
+    <polygon points="30.00,10.39 24.00,20.78 12.00,20.78 6.00,10.39 12.00,0.00 24.00,0.00" fill="none" stroke="#D4A017" stroke-opacity="0.14" stroke-width="1.1"/>
+    <polygon points="12.00,10.39 6.00,20.78 -6.00,20.78 -12.00,10.39 -6.00,0.00 6.00,0.00" fill="none" stroke="#D4A017" stroke-opacity="0.07" stroke-width="1.1"/>
+  </pattern></defs>
+<path d="M62.21,10.50 Q70.00,6.00 77.79,10.50 L117.63,33.50 Q125.43,38.00 125.43,47.00 L125.43,93.00 Q125.43,102.00 117.63,106.50 L77.79,129.50 Q70.00,134.00 62.21,129.50 L22.37,106.50 Q14.57,102.00 14.57,93.00 L14.57,47.00 Q14.57,38.00 22.37,33.50 Z" fill="#1F160D" stroke="url(#g3h)" stroke-width="2.5"/>
+<path d="M62.21,10.50 Q70.00,6.00 77.79,10.50 L117.63,33.50 Q125.43,38.00 125.43,47.00 L125.43,93.00 Q125.43,102.00 117.63,106.50 L77.79,129.50 Q70.00,134.00 62.21,129.50 L22.37,106.50 Q14.57,102.00 14.57,93.00 L14.57,47.00 Q14.57,38.00 22.37,33.50 Z" fill="url(#fv3i)"/>
+<g transform="translate(20 20)"><g stroke="#F5C542" fill="none" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M12 20 q22 -8 38 0 q16 -8 38 0 v62 q-22 -8 -38 0 q-16 -8 -38 0z"/>
+    <path d="M50 20 v62"/>
+    <path d="M22 36 h20 M22 50 h20 M58 36 h20 M58 50 h20" stroke-opacity="0.55"/>
+    <path d="M48.27,58.00 Q50.00,57.00 51.73,58.00 L56.06,60.50 Q57.79,61.50 57.79,63.50 L57.79,68.50 Q57.79,70.50 56.06,71.50 L51.73,74.00 Q50.00,75.00 48.27,74.00 L43.94,71.50 Q42.21,70.50 42.21,68.50 L42.21,63.50 Q42.21,61.50 43.94,60.50 Z" fill="#F5C542" fill-opacity="0.8" stroke="none"/></g></g>
+
+</svg>

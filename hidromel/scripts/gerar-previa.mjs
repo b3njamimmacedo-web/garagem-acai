@@ -36,7 +36,11 @@ const ler = (p) => readFileSync(join(RAIZ, p), 'utf8');
      Cormorant Garamond (itál.) -> Crimson Pro Italic
      Inter (corpo)              -> Instrument Sans
 =========================================================================== */
-const DIR_FONTES = '/mnt/skills/examples/canvas-design/canvas-fonts';
+// Fontes versionadas em assets/fontes/ (SIL OFL 1.1, ver LEIA-ME.md de lá).
+// Apontar para um caminho de fora do repositório fazia a prévia sair sem
+// tipografia em qualquer máquina que não fosse a de origem — inclusive no CI,
+// silenciosamente, porque o gerador só avisava e seguia.
+const DIR_FONTES = join(RAIZ, 'assets/fontes');
 const FONTES = [
   { arq: 'CrimsonPro-Bold.ttf',       familia: 'Reis Display', peso: 700, estilo: 'normal' },
   { arq: 'CrimsonPro-Italic.ttf',     familia: 'Reis Serif',   peso: 400, estilo: 'italic' },
@@ -46,9 +50,13 @@ const FONTES = [
 ];
 
 function cssFontes() {
-  if (!existsSync(DIR_FONTES)) {
-    console.warn('! diretório de fontes ausente — a prévia usará as fontes do sistema');
-    return '';
+  // Falha ruidosa em vez de degradar em silêncio: prévia sem as faces é uma
+  // prévia que não representa o produto, e passar batido é pior que quebrar.
+  const faltando = FONTES.map((f) => f.arq).filter((a) => !existsSync(join(DIR_FONTES, a)));
+  if (faltando.length) {
+    throw new Error(
+      `Fontes ausentes em assets/fontes/: ${faltando.join(', ')}\n` +
+      'Elas são versionadas no repositório — verifique se o clone está completo.');
   }
   return FONTES.map((f) => {
     const b64 = readFileSync(join(DIR_FONTES, f.arq)).toString('base64');

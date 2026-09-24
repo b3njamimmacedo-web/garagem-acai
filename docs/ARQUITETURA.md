@@ -20,6 +20,7 @@
 | Estado | `storage.py` | SQLite; cada aula tem status; módulo tem `expert_built`. Tudo retomável. |
 | Expert | `experts/builder.py` | Nota por aula → perfil estruturado (JSON schema) → índice de trechos. |
 | Busca | `experts/retrieval.py` | BM25 local em português, sem serviços externos. |
+| Fusão | `experts/fusion.py` | Agrupa experts por tema (Claude ou Jaccard offline) e cria experts sêniores. |
 | Conselho | `experts/coordinator.py` | Loop de tool use com `consult_expert(expert, question)`. |
 
 ## Ciclo de um módulo
@@ -54,8 +55,7 @@ quando a pergunta foge do escopo.
 ## Próximos passos
 
 1. **Calibrar seletores** com `asimov inspect` após o primeiro login.
-2. **Fusão de experts**: agrupar módulos do mesmo tema (ex.: vários módulos de Pandas) num
-   expert "sênior" que herda os trechos de todos.
+2. ~~Fusão de experts~~: feito (`experts/fusion.py`).
 3. **Hierarquia**: coordenadores por curso/trilha quando o número de experts crescer muito.
 4. **Embeddings** no lugar do BM25 se a busca lexical não bastar.
 5. **Avaliação**: um conjunto de perguntas por módulo para medir a qualidade dos experts.

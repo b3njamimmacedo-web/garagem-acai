@@ -11,6 +11,7 @@ from playwright.sync_api import sync_playwright
 from rich.console import Console
 
 from ..config import Settings
+from .browser import launch_kwargs
 
 console = Console()
 
@@ -18,7 +19,7 @@ console = Console()
 def interactive_login(s: Settings, timeout_min: int = 5) -> None:
     sel = s.get("selectors.login", {})
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=False)
+        browser = pw.chromium.launch(headless=False, **launch_kwargs(s))
         ctx = browser.new_context(locale="pt-BR")
         page = ctx.new_page()
         page.goto(s.get("site.login_url"))

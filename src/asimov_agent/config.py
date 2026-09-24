@@ -53,11 +53,15 @@ def load_settings(path: Path | None = None) -> Settings:
     load_dotenv(ROOT / ".env")
     path = path or ROOT / "config" / "settings.yaml"
     raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    s = Settings(
-        raw=raw,
+    return make_settings(
+        raw, ROOT,
         email=os.getenv("ASIMOV_EMAIL") or None,
         password=os.getenv("ASIMOV_PASSWORD") or None,
     )
+
+
+def make_settings(raw: dict[str, Any], root: Path, **kw: Any) -> Settings:
+    s = Settings(raw=raw, root=root, **kw)
     for d in (s.data_dir, s.raw_dir, s.experts_dir, s.auth_state.parent):
         d.mkdir(parents=True, exist_ok=True)
     return s

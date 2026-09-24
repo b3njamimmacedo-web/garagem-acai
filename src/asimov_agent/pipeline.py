@@ -14,6 +14,7 @@ from rich.console import Console
 
 from .config import Settings
 from .experts.builder import build_expert
+from .experts.fusion import fuse
 from .llm import LLM
 from .models import folder_name
 from .scraper.browser import SessionExpired, open_context
@@ -71,8 +72,12 @@ def harvest_lesson(s: Settings, ctx, row, mdir: Path, cookiefile: Path) -> None:
         transcript.write_text(text, encoding="utf-8")
 
 
-def run(s: Settings, store: Store, build_experts: bool = True, limit_modules: int | None = None) -> None:
-    llm = LLM(s) if build_experts else None
+def run(s: Settings, store: Store, build_experts: bool = True,
+        limit_modules: int | None = None, llm=None) -> int:
+    """Processa módulos pendentes em ordem. Retorna quantos módulos concluiu."""
+    if build_experts and llm is None:
+        llm = LLM(s)
+    fuse_after = build_experts and s.get("fusion.auto_after_module", True)
     cookiefile = storage_state_to_netscape(s.auth_state, s.auth_state.parent / "cookies.txt")
     done_modules = 0
     with open_context(s) as ctx:
@@ -98,11 +103,64 @@ def run(s: Settings, store: Store, build_experts: bool = True, limit_modules: in
             if not ok:
                 console.print("[yellow]Módulo com erros; expert adiado. Rode de novo para retentar.[/]")
                 continue
-            if llm:
+            if build_experts:
                 console.print("  🧠 construindo expert do módulo…")
-                path = build_expert(llm, mdir, s.experts_dir, m["course_title"], m["title"])
+                order = m["course_position"] * 1000 + m["position"]
+                path = build_expert(llm, mdir, s.experts_dir, m["course_title"], m["title"], order)
                 store.set_expert_built(m["id"])
                 console.print(f"  [green]expert pronto: {path.name}[/]")
+                if fuse_after:
+                    fuse_and_report(llm, s)
             done_modules += 1
             if limit_modules and done_modules >= limit_modules:
                 break
+    return done_modules
+
+
+def fuse_and_report(llm, s: Settings) -> dict:
+    state = fuse(llm, s.experts_dir)
+    merged = {k: v for k, v in state.get("themes", {}).items() if len(v["members"]) >= 2}
+    if merged:
+        console.print(f"  🔗 {len(merged)} tema(s) com expert sênior: " + ", ".join(merged))
+    return state
+
+
+def write_report(s: Settings, store: Store) -> Path:
+    """Gera data/RELATORIO.md com progresso, erros e o conselho atual."""
+    from .experts.registry import load_experts
+
+    p = store.progress()
+    lines = ["# Relatório do agente", "",
+             f"- Módulos: {p.get('experts', 0)}/{p.get('modules', 0)} com expert",
+             f"- Aulas concluídas: {p.get('done', 0)}",
+             f"- Aulas pendentes: {p.get('pending', 0)}",
+             f"- Aulas com erro: {p.get('error', 0)}", "", "## Conselho", ""]
+    for e in load_experts(s.experts_dir).values():
+        tag = f"sênior ({len(e.profile['members'])} módulos)" if e.is_theme else "módulo"
+        lines.append(f"- **{e.profile['name']}** `{e.slug}` — {tag}: {e.profile['when_to_consult']}")
+    errors = store.errors()
+    if errors:
+        lines += ["", "## Erros", ""] + [f"- {r['title']} ({r['url']}): {r['error']}" for r in errors]
+    out = s.data_dir / "RELATORIO.md"
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return out
+
+
+def autopilot(s: Settings, store: Store, passes: int = 3, llm=None) -> Path:
+    """Tudo de uma vez: mapa (se preciso) → aulas → experts → fusão → relatório.
+
+    Faz várias passadas para retentar aulas que falharam por instabilidade.
+    """
+    if not store.modules_in_order():
+        map_catalog(s, store)
+    llm = llm or LLM(s)
+    for i in range(1, passes + 1):
+        console.rule(f"Passada {i}/{passes}")
+        store.reset_errors()
+        run(s, store, llm=llm)
+        if not store.errors():
+            break
+    fuse_and_report(llm, s)
+    report = write_report(s, store)
+    console.print(f"[green]Relatório: {report}[/]")
+    return report

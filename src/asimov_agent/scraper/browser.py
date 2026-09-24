@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import random
 import time
 from contextlib import contextmanager
@@ -10,6 +11,12 @@ from typing import Iterator
 from playwright.sync_api import BrowserContext, Page, sync_playwright
 
 from ..config import Settings
+
+
+def launch_kwargs(s: Settings) -> dict:
+    """Permite apontar para um Chromium já instalado (crawl.executable_path)."""
+    exe = s.get("crawl.executable_path") or os.getenv("CHROMIUM_EXECUTABLE")
+    return {"executable_path": exe} if exe else {}
 
 
 class SessionExpired(RuntimeError):
@@ -22,7 +29,7 @@ def open_context(s: Settings, headless: bool | None = None) -> Iterator[BrowserC
         raise SessionExpired("Nenhuma sessão salva. Rode `asimov login` primeiro.")
     headless = s.get("crawl.headless", True) if headless is None else headless
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=headless)
+        browser = pw.chromium.launch(headless=headless, **launch_kwargs(s))
         ctx = browser.new_context(storage_state=str(s.auth_state), locale="pt-BR")
         try:
             yield ctx

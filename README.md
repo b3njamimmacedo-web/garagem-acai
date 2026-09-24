@@ -43,7 +43,19 @@ cp .env.example .env        # preencha ANTHROPIC_API_KEY (credenciais Asimov sã
 
 Requer `ffmpeg` no PATH para o áudio (yt-dlp/Whisper).
 
-## Uso
+## Rodar a noite toda (um comando)
+
+```bash
+asimov autopilot
+```
+
+Se não houver sessão salva, abre o navegador para você logar (1 minuto). Depois
+segue sozinho: mapeia o catálogo, assiste às aulas em ordem, baixa anexos, cria um
+expert por módulo, **funde os experts do mesmo tema** e grava `data/RELATORIO.md`.
+Faz até 3 passadas para retentar aulas que falharam. Deixe o computador ligado
+e sem hibernar (macOS: `caffeinate -i asimov autopilot`).
+
+## Uso passo a passo
 
 ```bash
 asimov login                 # abre o navegador; faça login (e o desafio do Cloudflare, se houver)
@@ -52,6 +64,7 @@ asimov map                   # mapeia o catálogo em ordem
 asimov run --limit-modules 1 # teste com 1 módulo
 asimov run                   # roda tudo (retomável: pode parar e rodar de novo)
 asimov status                # progresso
+asimov fuse                  # reagrupa/funde experts por tema (--offline: sem Claude)
 asimov experts               # lista o conselho
 asimov ask "Como faço um dashboard com Streamlit lendo um CSV?"
 asimov chat
@@ -64,6 +77,23 @@ Não há acesso à área logada durante o desenvolvimento, então os seletores C
 cursos, numa página de curso e numa aula, e ajuste `selectors.*` e `site.courses_url`
 até o `asimov map` listar os módulos e aulas corretamente.
 
+## Fusão de experts por tema
+
+Depois de cada módulo, o Claude agrupa os experts de módulo por tema (ex.: "Pandas I" e
+"Pandas II" → tema `pandas`). Cada tema com 2 ou mais módulos vira um **expert sênior**
+(`data/experts/_themes/<tema>/`) com perfil consolidado e a união dos trechos de todos
+os módulos. O coordenador passa a consultar o sênior no lugar dos experts de módulo.
+
+- Temas já existentes são preservados: módulos novos entram neles ou criam temas novos.
+- Só é refeita a fusão de um tema cuja lista de membros mudou.
+- `asimov fuse --offline` agrupa por similaridade de termos, sem custo de API.
+
+## Testes
+
+```bash
+pytest   # inclui um teste de ponta a ponta: site simulado + Chromium real + Claude simulado
+```
+
 ## Estrutura
 
 ```
@@ -75,10 +105,12 @@ src/asimov_agent/
   transcribe.py             legendas / Whisper
   llm.py                    cliente Claude
   scraper/                  login, catálogo, aula, anexos
-  experts/                  construção, registro, busca BM25, coordenador
+  experts/                  construção, fusão por tema, registro, busca BM25, coordenador
 data/ (ignorado no git)
   raw/<curso>/<módulo>/<aula>/   lesson.md, transcript.txt, attachments/, meta.json
   experts/<slug>/                profile.json, notes/, chunks.jsonl
+  experts/_themes/<tema>/        experts sêniores (fusão) + themes.json
+  RELATORIO.md                   progresso, conselho e erros
 ```
 
 ## Cuidados

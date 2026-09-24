@@ -30,6 +30,8 @@ crawl:
   delay_min: 2.0
   delay_max: 5.0
   mark_lessons_complete: false
+  # Caminho de um Chromium já instalado (opcional)
+  executable_path: null
 
 media:
   # 1º tenta legendas; se não houver, baixa só o áudio e transcreve localmente
@@ -48,3 +50,7 @@ llm:
 paths:
   data_dir: "data"
   auth_state: ".auth/state.json"
+
+fusion:
+  # Reagrupa e funde experts por tema depois de cada módulo concluído
+  auto_after_module: true

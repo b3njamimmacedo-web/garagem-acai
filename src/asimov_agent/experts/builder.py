@@ -64,7 +64,7 @@ MAX_LESSON_CHARS = 300_000
 
 
 def build_expert(llm: LLM, module_dir: Path, experts_dir: Path,
-                 course_title: str, module_title: str) -> Path:
+                 course_title: str, module_title: str, order: int = 0) -> Path:
     slug = slugify(f"{course_title}-{module_title}")[:80]
     out = experts_dir / slug
     (out / "notes").mkdir(parents=True, exist_ok=True)
@@ -96,7 +96,8 @@ def build_expert(llm: LLM, module_dir: Path, experts_dir: Path,
         f"Curso: {course_title}\nMódulo: {module_title}\n\n" + "\n\n".join(notes),
         PROFILE_SCHEMA,
     )
-    profile |= {"slug": slug, "course": course_title, "module": module_title}
+    profile |= {"slug": slug, "kind": "module", "course": course_title,
+                "module": module_title, "order": order}
     (out / "profile.json").write_text(json.dumps(profile, ensure_ascii=False, indent=2), encoding="utf-8")
     with (out / "chunks.jsonl").open("w", encoding="utf-8") as f:
         for c in chunks:

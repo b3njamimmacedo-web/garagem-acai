@@ -1,4 +1,4 @@
-"""CLI: `asimov login | map | run | status | experts | ask | chat | inspect`."""
+"""CLI: `asimov autopilot | login | map | run | fuse | status | experts | ask | chat | inspect`."""
 
 from __future__ import annotations
 
@@ -58,6 +58,32 @@ def run(
 
     s = load_settings()
     run_pipeline(s, Store(s.db_path), build_experts=not no_experts, limit_modules=limit_modules)
+
+
+@app.command()
+def fuse(offline: bool = typer.Option(False, help="Agrupa por similaridade, sem chamar o Claude")):
+    """Funde experts do mesmo tema em experts sêniores."""
+    from .experts.fusion import fuse as do_fuse
+    from .llm import LLM
+
+    s = load_settings()
+    state = do_fuse(None if offline else LLM(s), s.experts_dir)
+    t = Table("tema", "membros")
+    for slug, v in state.get("themes", {}).items():
+        t.add_row(f"{v['theme_name']} ({slug})", "\n".join(v["members"]))
+    console.print(t)
+
+
+@app.command()
+def autopilot(passes: int = typer.Option(3, help="Passadas para retentar aulas com erro")):
+    """Faz tudo sozinho: login (se preciso) → mapa → aulas → experts → fusão → relatório."""
+    from .pipeline import autopilot as run_autopilot
+    from .scraper.auth import interactive_login
+
+    s = load_settings()
+    if not s.auth_state.exists():
+        interactive_login(s)
+    run_autopilot(s, Store(s.db_path), passes=passes)
 
 
 @app.command()

@@ -106,6 +106,14 @@ class Store:
                 "SELECT * FROM lessons WHERE module_id=? ORDER BY position", (module_id,)
             ).fetchall()
 
+    def errors(self) -> list[sqlite3.Row]:
+        with self.conn() as c:
+            return c.execute("SELECT * FROM lessons WHERE status='error' ORDER BY id").fetchall()
+
+    def reset_errors(self) -> None:
+        with self.conn() as c:
+            c.execute("UPDATE lessons SET status='pending' WHERE status='error'")
+
     def progress(self) -> dict[str, int]:
         with self.conn() as c:
             rows = c.execute("SELECT status, COUNT(*) n FROM lessons GROUP BY status").fetchall()

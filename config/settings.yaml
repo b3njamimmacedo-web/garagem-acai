@@ -1,0 +1,50 @@
+# Configuração do agente. Os seletores CSS precisam ser calibrados
+# depois do primeiro login: rode `asimov inspect <url>` e ajuste aqui.
+
+site:
+  base_url: "https://hub.asimov.academy"
+  login_url: "https://hub.asimov.academy/login"
+  # Página que lista os cursos/trilhas que você tem acesso
+  courses_url: "https://hub.asimov.academy/cursos"
+
+selectors:
+  login:
+    email: "input[type=email], input[name=email], input[name=log]"
+    password: "input[type=password]"
+    submit: "button[type=submit], input[type=submit]"
+  catalog:
+    course_link: "a[href*='/curso/'], a[href*='/cursos/']"
+  course:
+    module: ".module, .modulo, [class*=module]"
+    module_title: "h2, h3, [class*=title]"
+    lesson_link: "a[href*='/aula/'], a[href*='/lesson/'], a[href*='/aulas/']"
+  lesson:
+    title: "h1"
+    content: "main, article, .lesson-content, [class*=content]"
+    attachments: "a[download], a[href$='.pdf'], a[href$='.zip'], a[href$='.ipynb'], a[href$='.py'], a[href$='.csv'], a[href$='.xlsx'], a[href$='.docx'], a[href$='.pptx']"
+    mark_complete: "button:has-text('Concluir'), button:has-text('Marcar como')"
+
+crawl:
+  headless: true
+  # Pausa aleatória entre páginas (segundos) — seja gentil com o servidor
+  delay_min: 2.0
+  delay_max: 5.0
+  mark_lessons_complete: false
+
+media:
+  # 1º tenta legendas; se não houver, baixa só o áudio e transcreve localmente
+  prefer_captions: true
+  whisper_model: "small"
+  whisper_language: "pt"
+  keep_audio: false
+  keep_video: false
+
+llm:
+  model: "claude-opus-5"
+  effort: "high"
+  # Reexecuta no modelo recomendado se houver recusa por classificador
+  server_side_fallback: true
+
+paths:
+  data_dir: "data"
+  auth_state: ".auth/state.json"

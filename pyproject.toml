@@ -1,0 +1,33 @@
+[project]
+name = "asimov-experts"
+version = "0.1.0"
+description = "Agente que estuda os cursos da Asimov Academy em ordem e cria um conselho de experts coordenado por um orquestrador."
+requires-python = ">=3.10"
+dependencies = [
+  "anthropic>=0.70",
+  "playwright>=1.45",
+  "typer>=0.12",
+  "rich>=13.7",
+  "pyyaml>=6.0",
+  "python-dotenv>=1.0",
+  "yt-dlp>=2024.8.6",
+  "python-slugify>=8.0",
+  "pypdf>=4.0",
+]
+
+[project.optional-dependencies]
+whisper = ["faster-whisper>=1.0"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+asimov = "asimov_agent.cli:app"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

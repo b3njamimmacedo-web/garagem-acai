@@ -1,4 +1,20 @@
-node_modules
-dist
+# Segredos e sessão do navegador — NUNCA versionar
+.env
+.auth/
+
+# Conteúdo baixado do curso (material pago, uso pessoal) e artefatos gerados
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+
+# SO
 .DS_Store
-*.local
